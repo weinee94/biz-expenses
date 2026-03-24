@@ -172,7 +172,10 @@ select.fi option{background:var(--surface)}
 <body>
 <div class="app">
   <div class="header">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <div class="app-label">Business Expenses</div>
+    <a href="https://weinee94.github.io/biz-expenses/receipt-scanner.html" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;letter-spacing:.06em;display:flex;align-items:center;gap:4px">📷 扫描单据</a>
+  </div>
     <div class="header-row">
       <div class="month-title" id="mlabel">—</div>
       <div class="hdr-right">
@@ -225,24 +228,24 @@ select.fi option{background:var(--surface)}
   </div>
   <div class="fg"><label class="fl">税务类别 (LHDN)</label>
     <select class="fi" id="f-taxcat">
-      <option value="Salaries & EPF/SOCSO/EIS">薪资与雇主供款</option>
-      <option value="Professional Fees">专业服务费</option>
-      <option value="Rental">租金</option>
-      <option value="Software & Subscriptions">软件订阅</option>
-      <option value="Telephone & Internet">电话与网络</option>
-      <option value="Travelling & Transportation">差旅交通</option>
-      <option value="Entertainment">招待娱乐 (50%)</option>
-      <option value="Advertisement & Marketing">广告营销</option>
-      <option value="Repairs & Maintenance">维修保养</option>
-      <option value="Utilities">公用事业</option>
-      <option value="Bank Charges">银行手续费</option>
-      <option value="Insurance">保险</option>
-      <option value="Govt Fees & Licences">政府规费与执照</option>
-      <option value="Training & Development">培训进修</option>
-      <option value="Printing & Stationery">印刷文具</option>
-      <option value="Donations">捐款</option>
-      <option value="Capital Expenditure">资本开支 (CA)</option>
-      <option value="Miscellaneous">其他</option>
+      <option value="Salaries & EPF/SOCSO/EIS">薪资与雇主供款 — Salaries & EPF/SOCSO/EIS</option>
+      <option value="Professional Fees">专业服务费 — Professional Fees</option>
+      <option value="Rental">租金 — Rental</option>
+      <option value="Software & Subscriptions">软件订阅 — Software & Subscriptions</option>
+      <option value="Telephone & Internet">电话与网络 — Telephone & Internet</option>
+      <option value="Travelling & Transportation">差旅交通 — Travelling & Transportation</option>
+      <option value="Entertainment">招待娱乐 — Entertainment (50%)</option>
+      <option value="Advertisement & Marketing">广告营销 — Advertisement & Marketing</option>
+      <option value="Repairs & Maintenance">维修保养 — Repairs & Maintenance</option>
+      <option value="Utilities">公用事业 — Utilities</option>
+      <option value="Bank Charges">银行手续费 — Bank Charges</option>
+      <option value="Insurance">保险 — Insurance</option>
+      <option value="Govt Fees & Licences">政府规费与执照 — Govt Fees & Licences</option>
+      <option value="Training & Development">培训进修 — Training & Development</option>
+      <option value="Printing & Stationery">印刷文具 — Printing & Stationery</option>
+      <option value="Donations">捐款 — Donations</option>
+      <option value="Capital Expenditure">资本开支 — Capital Expenditure (CA)</option>
+      <option value="Miscellaneous">其他 — Miscellaneous</option>
     </select>
   </div>
   <div class="fg"><label class="fl">可抵税比例</label>
@@ -340,8 +343,7 @@ async function api(method,table,body,params){
 async function loadData(){
   try{
     expenses=await api('GET','expenses',null,'order=billing_day.asc')||[];
-    const m=String(thisMonth+1).padStart(2,'0');
-    logs=await api('GET','expense_logs',null,`log_date=gte.${thisYear}-${m}-01&log_date=lte.${thisYear}-${m}-31&order=created_at.desc`)||[];
+    logs=await api('GET','expense_logs',null,`log_date=gte.${thisYear}-01-01&log_date=lte.${thisYear}-12-31&order=created_at.desc`)||[];
   }catch(e){showToast('加载失败');}
 }
 async function loadYear(y){
@@ -363,7 +365,10 @@ function ekey(v){
 function elabel(v){return (ENT[ekey(v)]||ENT.twn).s;}
 function freq(e){return e.frequency||(e.expense_type==='onetime'?'onetime':'monthly');}
 function tpct(e){return typeof e.tax_deductible==='number'?e.tax_deductible:100;}
-function marked(id){return logs.some(l=>l.expense_id===id);}
+function marked(id){
+  const m=String(thisMonth+1).padStart(2,'0');
+  return logs.some(l=>l.expense_id===id&&l.log_date&&l.log_date.startsWith(`${thisYear}-${m}`));
+}
 function moEquiv(e){const f=freq(e),m=toMYR(e.amount,e.currency);return f==='monthly'?m:f==='quarterly'?m/3:f==='yearly'?m/12:0;}
 function dueThisMo(e){
   const f=freq(e);
@@ -439,6 +444,7 @@ function renderExpenses(){
   });
   if(!h) h='<div class="empty">暂无项目</div>';
   h+=`<button class="btn-add" onclick="openAdd()">+ 添加开支项目</button>`;
+  h+=`<a href="https://weinee94.github.io/biz-expenses/receipt-scanner.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;color:var(--text);margin-top:10px"><div><div style="font-size:14px;font-weight:500">📷 扫描单据自动填入</div><div style="font-size:12px;color:var(--text3);margin-top:2px">拍照识别金额、类别、日期</div></div><div style="color:var(--text3);font-size:16px">→</div></a>`;
   document.getElementById('tab-expenses').innerHTML=h;
 }
 function erow(e){
@@ -449,13 +455,26 @@ function erow(e){
 
 // Log
 function renderLog(){
-  if(!logs.length){document.getElementById('tab-log').innerHTML='<div class="empty">本月暂无记账记录</div>';return;}
-  let h='<div class="slabel">本月记账记录</div><div class="card">';
+  if(!logs.length){document.getElementById('tab-log').innerHTML='<div class="empty">暂无记账记录</div>';return;}
+  // Group by year-month
+  const groups={};
   logs.forEach(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id)||{name:'(已删除)',entity:''};
-    h+=`<div class="li"><div style="flex:1;min-width:0"><div class="li-name">${e.name}</div><div class="li-meta"><span class="pill p-ent">${elabel(e.entity)}</span>${l.note?' · '+l.note:''}</div><button class="btn-sm del" style="margin-top:8px" onclick="delLog('${l.id}')">删除</button></div><div style="text-align:right;flex-shrink:0;margin-left:12px"><div class="li-amt">${fmt(l.myr_amount)}</div><div class="li-date">${l.log_date}${l.exchange_rate?' · '+l.exchange_rate:''}</div></div></div>`;
+    const key=l.log_date?l.log_date.substring(0,7):'unknown';
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(l);
   });
-  h+='</div>';
+  let h='';
+  Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(ym=>{
+    const [y,m]=ym.split('-');
+    const label=MO[parseInt(m)-1]+' '+y;
+    const monthTotal=groups[ym].reduce((s,l)=>s+l.myr_amount,0);
+    h+=`<div class="slabel">${label} · ${fmt(monthTotal)}</div><div class="card">`;
+    groups[ym].forEach(l=>{
+      const e=expenses.find(x=>x.id===l.expense_id)||{name:'(已删除)',entity:''};
+      h+=`<div class="li"><div style="flex:1;min-width:0"><div class="li-name">${e.name}</div><div class="li-meta"><span class="pill p-ent">${elabel(e.entity)}</span>${l.note?' · '+l.note:''}</div><button class="btn-sm del" style="margin-top:8px" onclick="delLog('${l.id}')">删除</button></div><div style="text-align:right;flex-shrink:0;margin-left:12px"><div class="li-amt">${fmt(l.myr_amount)}</div><div class="li-date">${l.log_date}${l.exchange_rate?' · '+l.exchange_rate:''}</div></div></div>`;
+    });
+    h+='</div>';
+  });
   document.getElementById('tab-log').innerHTML=h;
 }
 

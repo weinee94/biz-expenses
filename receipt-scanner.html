@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单据识别结果</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f5f3;--surface:#fff;--surface2:#f0f0ec;
+  --border:#e8e8e2;--border2:#d0d0c8;
+  --text:#111;--text2:#666;--text3:#aaa;
+  --green:#1a7a3a;--green-bg:#eef7f1;
+  --amber:#946000;--amber-bg:#fdf5e4;
+  --red:#c0392b;--red-bg:#fdf0ee;
+  --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;padding:24px 16px 48px}
+.wrap{max-width:460px;margin:0 auto}
+
+.title{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--text3);font-family:var(--mono);margin-bottom:24px}
+
+/* Steps */
+.steps-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:20px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--text);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:14px;color:var(--text2);line-height:1.5}
+.step-text strong{color:var(--text);font-weight:500}
+
+/* Paste area */
+.paste-label{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.04em;margin-bottom:8px;display:block}
+.paste-area{width:100%;min-height:120px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;resize:vertical;transition:border-color .15s;margin-bottom:10px}
+.paste-area:focus{border-color:var(--text2)}
+.paste-area::placeholder{color:var(--text3)}
+.parse-btn{width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:20px;transition:opacity .15s}
+.parse-btn:hover{opacity:.85}
+
+/* Result card */
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.result-header{padding:14px 16px;background:var(--text);color:#fff;display:flex;justify-content:space-between;align-items:center}
+.result-name{font-size:16px;font-weight:600}
+.result-date{font-size:12px;opacity:.6;font-family:var(--mono)}
+.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px}
+.result-row:last-child{border-bottom:none}
+.rkey{font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;padding-top:2px}
+.rval{font-size:14px;font-weight:500;text-align:right;flex:1}
+.rval.big{font-size:18px;font-weight:600;color:var(--green)}
+.pill{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.p-green{background:var(--green-bg);color:var(--green)}
+.p-amber{background:var(--amber-bg);color:var(--amber)}
+.p-red{background:var(--red-bg);color:var(--red)}
+.p-gray{background:var(--surface2);color:var(--text2)}
+
+/* Field copy buttons */
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.field-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s}
+.field-btn:hover{border-color:var(--text2);background:var(--surface2)}
+.field-btn:active{transform:scale(.97)}
+.fb-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.fb-val{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Actions */
+.action-row{display:flex;gap:10px;margin-bottom:20px}
+.copy-all-btn{flex:1;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.copy-all-btn:hover{opacity:.85}
+.reset-btn{padding:13px 18px;background:none;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:14px;font-weight:500;color:var(--text2);cursor:pointer}
+
+/* App link */
+.app-link{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;color:var(--text)}
+.al-main{font-size:14px;font-weight:500}
+.al-sub{font-size:12px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+
+/* Error */
+.err{background:var(--red-bg);border:1px solid #f5c0b8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border-radius:20px;padding:10px 22px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:100}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">📋 单据识别结果</div>
+  <div class="subtitle">将 Claude 的识别结果贴入，一键填入开支系统</div>
+
+  <!-- How to use -->
+  <div class="steps-card">
+    <div class="step"><div class="step-num">1</div><div class="step-text">在 <strong>Claude 对话</strong>上传单据图片</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Claude 返回 JSON 数据，<strong>全选复制</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">贴到下方文字框，点<strong>解析</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">点各字段按钮复制，填入<strong>开支系统</strong>记账</div></div>
+  </div>
+
+  <!-- Paste input -->
+  <label class="paste-label">贴入 Claude 返回的 JSON</label>
+  <textarea class="paste-area" id="json-input" placeholder='{"name":"餐饮","date":"2026-03-24","amount":85.50,"currency":"MYR","myr_amount":85.50,"tax_category":"Entertainment","tax_deductible":50,"entity":"twn","note":""}'>
+  </textarea>
+  <button class="parse-btn" onclick="parseJSON()">解析识别结果</button>
+
+  <!-- Error -->
+  <div id="err-box" class="err" style="display:none"></div>
+
+  <!-- Result -->
+  <div id="result-section" style="display:none">
+
+    <div class="result-card" id="result-card"></div>
+
+    <div class="fields-grid" id="fields-grid"></div>
+
+    <div class="action-row">
+      <button class="copy-all-btn" onclick="copyAll()">复制全部字段</button>
+      <button class="reset-btn" onclick="resetAll()">清除</button>
+    </div>
+
+    <a class="app-link" href="https://weinee94.github.io/biz-expenses" target="_blank">
+      <div>
+        <div class="al-main">前往开支系统记账 →</div>
+        <div class="al-sub">weinee94.github.io/biz-expenses</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TAX_ZH={
+  'Salaries & EPF/SOCSO/EIS':'薪资与供款','Professional Fees':'专业服务费',
+  'Rental':'租金','Software & Subscriptions':'软件订阅',
+  'Telephone & Internet':'电话与网络','Travelling & Transportation':'差旅交通',
+  'Entertainment':'招待娱乐','Advertisement & Marketing':'广告营销',
+  'Repairs & Maintenance':'维修保养','Utilities':'公用事业',
+  'Bank Charges':'银行手续费','Insurance':'保险',
+  'Govt Fees & Licences':'政府规费','Training & Development':'培训进修',
+  'Printing & Stationery':'印刷文具','Donations':'捐款',
+  'Capital Expenditure':'资本开支','Miscellaneous':'其他'
+};
+const ENT_ZH={wynne:'WYNNE PLT',thf:'THE HOME FACTORY (THF)',twn:'TAN WEI NEE (TWN)'};
+const FMT=n=>'RM '+parseFloat(n).toFixed(2);
+
+let data=null;
+
+function parseJSON(){
+  const raw=document.getElementById('json-input').value.trim();
+  document.getElementById('err-box').style.display='none';
+  try{
+    let clean=raw.replace(/```json|```/g,'').trim();
+    data=JSON.parse(clean);
+    showResult(data);
+  }catch(e){
+    document.getElementById('err-box').textContent='JSON 格式有误，请检查是否完整复制了 Claude 的输出。';
+    document.getElementById('err-box').style.display='';
+    document.getElementById('result-section').style.display='none';
+  }
+}
+
+function showResult(d){
+  const taxZh=TAX_ZH[d.tax_category]||d.tax_category;
+  const entZh=ENT_ZH[d.entity]||d.entity;
+  const pct=d.tax_deductible;
+  const pCls=pct===100?'p-green':pct===50?'p-amber':'p-red';
+  const amtStr=d.currency!=='MYR'?`${d.currency} ${d.amount} ≈ ${FMT(d.myr_amount)}`:FMT(d.myr_amount);
+
+  document.getElementById('result-card').innerHTML=`
+    <div class="result-header">
+      <div class="result-name">${d.name}</div>
+      <div class="result-date">${d.date}</div>
+    </div>
+    <div class="result-row"><span class="rkey">金额</span><span class="rval big">${amtStr}</span></div>
+    <div class="result-row"><span class="rkey">税务类别</span><span class="rval">${taxZh}<br><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${d.tax_category}</span></span></div>
+    <div class="result-row"><span class="rkey">可抵税</span><span class="rval"><span class="pill ${pCls}">${pct}%</span></span></div>
+    <div class="result-row"><span class="rkey">实体</span><span class="rval"><span class="pill p-gray">${entZh}</span></span></div>
+    ${d.note?`<div class="result-row"><span class="rkey">备注</span><span class="rval" style="color:var(--text2)">${d.note}</span></div>`:''}
+  `;
+
+  // Individual copy buttons
+  const fields=[
+    {label:'名称',val:d.name},
+    {label:'日期',val:d.date},
+    {label:'金额 (MYR)',val:parseFloat(d.myr_amount).toFixed(2)},
+    {label:'汇率',val:d.currency!=='MYR'?String(({'USD':4.45,'SGD':3.10,'EUR':4.90})[d.currency]||''):''},
+    {label:'税务类别',val:d.tax_category},
+    {label:'实体',val:d.entity},
+    {label:'备注',val:d.note||''},
+  ].filter(f=>f.val!=='');
+
+  document.getElementById('fields-grid').innerHTML=fields.map(f=>`
+    <button class="field-btn" onclick="copyField('${f.val.replace(/'/g,"\\'")}','${f.label}')">
+      <div class="fb-label">${f.label}</div>
+      <div class="fb-val">${f.val}</div>
+    </button>
+  `).join('');
+
+  document.getElementById('result-section').style.display='';
+}
+
+function copyField(val,label){
+  navigator.clipboard.writeText(val).then(()=>showToast(label+' 已复制'));
+}
+
+function copyAll(){
+  if(!data) return;
+  const lines=[
+    `名称：${data.name}`,
+    `日期：${data.date}`,
+    `金额：${data.currency} ${data.amount}`,
+    `马币：${FMT(data.myr_amount)}`,
+    `税务类别：${data.tax_category}`,
+    `可抵税：${data.tax_deductible}%`,
+    `实体：${data.entity}`,
+    data.note?`备注：${data.note}`:''
+  ].filter(Boolean).join('\n');
+  navigator.clipboard.writeText(lines).then(()=>showToast('全部字段已复制'));
+}
+
+function resetAll(){
+  data=null;
+  document.getElementById('json-input').value='';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('err-box').style.display='none';
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+</script>
+</body>
+</html>
