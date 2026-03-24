@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商业开支记录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --border2: #333333;
+    --text: #e8e8e8;
+    --text2: #888888;
+    --text3: #555555;
+    --accent: #c8f04a;
+    --accent-dim: #8aaa2a;
+    --danger: #ff5a5a;
+    --warn: #f0a500;
+    --success: #4adf8a;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Noto Sans SC', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+  .header { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .app-title { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .month-label { font-size: 22px; font-weight: 300; }
+  .header-stats { text-align: right; }
+  .header-amount { font-family: var(--mono); font-size: 20px; color: var(--accent); }
+  .header-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 12px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: var(--mono); letter-spacing: 0.05em; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .content { padding: 16px 20px; }
+  .section-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin: 20px 0 10px; }
+  .section-label:first-child { margin-top: 0; }
+
+  .reminder-card { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .reminder-card:last-child { border-bottom: none; }
+  .day-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .day-done { background: #1a2a1a; color: var(--success); }
+  .day-overdue { background: #2a1a1a; color: var(--danger); }
+  .day-soon { background: #2a2010; color: var(--warn); }
+  .day-normal { background: var(--surface); color: var(--text2); }
+  .day-onetime { background: #1a1a2a; color: #8888ff; }
+  .reminder-info { flex: 1; min-width: 0; }
+  .reminder-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .reminder-meta { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .reminder-right { text-align: right; flex-shrink: 0; }
+  .reminder-amount { font-family: var(--mono); font-size: 13px; }
+  .reminder-myr { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+  .btn-mark { margin-top: 6px; font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 4px; background: none; color: var(--text2); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; display: block; margin-left: auto; }
+  .btn-mark:hover { border-color: var(--accent); color: var(--accent); }
+  .done-label { font-size: 10px; color: var(--success); font-family: var(--mono); margin-top: 6px; }
+
+  .entity-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface2); color: var(--text3); margin-right: 4px; }
+  .cat-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface); color: var(--text3); }
+  .one-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #1a1a2a; color: #8888ff; margin-left: 4px; }
+
+  .expense-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .expense-item:last-child { border-bottom: none; }
+  .expense-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .expense-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .expense-amount { font-family: var(--mono); font-size: 13px; color: var(--accent); flex-shrink: 0; }
+  .expense-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-sm { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 4px; background: none; color: var(--text3); cursor: pointer; letter-spacing: 0.05em; }
+  .btn-sm:hover { color: var(--text); border-color: var(--text2); }
+  .btn-sm.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+  .log-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .log-item:last-child { border-bottom: none; }
+  .log-name { font-size: 13px; font-weight: 500; }
+  .log-meta { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .log-amount { font-family: var(--mono); font-size: 13px; color: var(--success); text-align: right; }
+  .log-date { font-size: 10px; color: var(--text3); font-family: var(--mono); text-align: right; margin-top: 3px; }
+
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-label { font-size: 13px; color: var(--text2); }
+  .summary-val { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+
+  .add-row { margin-top: 16px; }
+  .btn-add { width: 100%; padding: 12px; border: 1px dashed var(--border2); border-radius: 8px; background: none; color: var(--text3); font-family: var(--mono); font-size: 11px; cursor: pointer; letter-spacing: 0.1em; transition: all 0.15s; }
+  .btn-add:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
+  .modal { background: var(--surface); border-top: 1px solid var(--border2); border-radius: 16px 16px 0 0; padding: 24px 20px 40px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: var(--mono); font-size: 12px; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.08em; margin-bottom: 6px; display: block; }
+  .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; }
+  .form-input:focus { border-color: var(--accent-dim); }
+  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  select.form-input option { background: var(--surface2); }
+
+  .type-toggle { display: flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
+  .type-btn { flex: 1; padding: 9px 0; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text3); cursor: pointer; background: none; border: none; letter-spacing: 0.05em; transition: all 0.15s; }
+  .type-btn.active-rec { background: var(--surface2); color: var(--accent); }
+  .type-btn.active-one { background: var(--surface2); color: #8888ff; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-primary { flex: 1; padding: 12px; background: var(--accent); color: #0f0f0f; border: none; border-radius: 6px; font-family: var(--mono); font-size: 12px; font-weight: 500; cursor: pointer; letter-spacing: 0.08em; }
+  .btn-primary:hover { background: #d4f55a; }
+  .btn-cancel { padding: 12px 20px; background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--text3); font-family: var(--mono); font-size: 12px; cursor: pointer; }
+
+  .empty-state { text-align: center; padding: 40px 0; color: var(--text3); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; line-height: 2; }
+  .loading { text-align: center; padding: 40px 0; color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 20px; font-family: var(--mono); font-size: 11px; color: var(--text2); z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">Business Expenses</div>
+        <div class="month-label" id="month-label">—</div>
+      </div>
+      <div class="header-stats">
+        <div class="header-amount" id="total-myr">RM —</div>
+        <div class="header-sub" id="progress-text">— / — 已记账</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('reminders')">提醒</button>
+    <button class="tab" onclick="switchTab('expenses')">开支</button>
+    <button class="tab" onclick="switchTab('log')">记录</button>
+    <button class="tab" onclick="switchTab('summary')">总结</button>
+  </div>
+
+  <div class="content">
+    <div id="tab-reminders"></div>
+    <div id="tab-expenses" style="display:none"></div>
+    <div id="tab-log" style="display:none"></div>
+    <div id="tab-summary" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal-overlay" id="add-modal" style="display:none" onclick="if(event.target===this)closeModal('add-modal')">
+<div class="modal">
+  <div class="modal-title">添加开支项目</div>
+  <div class="form-group">
+    <label class="form-label">开支类型</label>
+    <div class="type-toggle">
+      <button class="type-btn active-rec" id="btn-rec" onclick="setType('recurring')">每月固定</button>
+      <button class="type-btn" id="btn-one" onclick="setType('onetime')">一次性</button>
+    </div>
+  </div>
+  <div class="form-group"><label class="form-label">开支名称</label><input class="form-input" id="f-name" placeholder="例：Google Workspace"></div>
+  <div class="form-group"><label class="form-label">所属实体</label>
+    <select class="form-input" id="f-entity">
+      <option value="wynne">WYNNE CONSULTANCY GROUP PLT</option>
+      <option value="thf">THE HOME FACTORY SDN. BHD.</option>
+      <option value="twn">TAN WEI NEE</option>
+    </select>
+  </div>
+  <div class="form-group"><label class="form-label">类别</label>
+    <select class="form-input" id="f-cat">
+      <option>软件订阅</option><option>专业服务</option><option>办公室租金</option>
+      <option>薪资</option><option>保险</option><option>银行手续费</option>
+      <option>营销广告</option><option>交通运输</option><option>公用事业</option><option>其他</option>
+    </select>
+  </div>
+  <div class="form-row2">
+    <div class="form-group"><label class="form-label">金额</label><input class="form-input" id="f-amount" type="number" placeholder="0.00"></div>
+    <div class="form-group"><label class="form-label">货币</label>
+      <select class="form-input" id="f-currency"><option>MYR</option><option>USD</option><option>SGD</option></select>
+    </div>
+  </div>
+  <div class="form-group" id="day-field"><label class="form-label">每月扣款日</label><input class="form-input" id="f-day" type="number" min="1" max="31" placeholder="24"></div>
+  <div class="form-group" id="date-field" style="display:none"><label class="form-label">预计发生日期</label><input class="form-input" id="f-date" type="date"></div>
+  <div class="form-group"><label class="form-label">备注（可选）</label><input class="form-input" id="f-note" placeholder=""></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeModal('add-modal')">取消</button>
+    <button class="btn-primary" onclick="saveExpense()">保存</button>
+  </div>
+</div>
+</div>
+
+<!-- Mark Modal -->
+<div class="modal-overlay" id="mark-modal" style="display:none" onclick="if(event.target===this)closeModal('mark-modal')">
+<div class="modal">
+  <div class="modal-title" id="mark-title">标记记账</div>
+  <div class="form-group"><label class="form-label">实际金额（马币 RM）</label><input class="form-input" id="m-amount" type="number" placeholder="0.00"></div>
+  <div class="form-group"><label class="form-label">汇率（如非马币）</label><input class="form-input" id="m-rate" type="number" step="0.0001" placeholder="例：4.45"></div>
+  <div class="form-group"><label class="form-label">记账日期</label><input class="form-input" id="m-date" type="date"></div>
+  <div class="form-group"><label class="form-label">备注（可选）</label><input class="form-input" id="m-note" placeholder=""></div>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeModal('mark-modal')">取消</button>
+    <button class="btn-primary" onclick="saveMark()">确认记账</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://artigtysbyfiqgmskcsu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydGlndHlzYnlmaXFnbXNrY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjQwMDQsImV4cCI6MjA4OTkwMDAwNH0.eaAz4R-xcDJFgzqMD3CRdQ6sCAreonR0z2lv1teor0U';
+const USD_MYR = 4.45, SGD_MYR = 3.10;
+
+let expenses = [], logs = [], markingId = null, selectedType = 'recurring';
+const today = new Date();
+const thisYear = today.getFullYear(), thisMonth = today.getMonth();
+const MONTHS = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+
+async function api(method, table, body, params) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}${params ? '?' + params : ''}`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': method === 'POST' ? 'return=representation' : '' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const t = await res.text(); return t ? JSON.parse(t) : null;
+}
+
+async function loadData() {
+  try {
+    expenses = await api('GET', 'expenses', null, 'order=billing_day.asc') || [];
+    const m = String(thisMonth + 1).padStart(2, '0');
+    logs = await api('GET', 'expense_logs', null, `log_date=gte.${thisYear}-${m}-01&log_date=lte.${thisYear}-${m}-31&order=created_at.desc`) || [];
+  } catch(e) { showToast('加载失败'); }
+}
+
+function toMYR(amount, currency) {
+  if (currency === 'USD') return amount * USD_MYR;
+  if (currency === 'SGD') return amount * SGD_MYR;
+  return amount;
+}
+function isMarked(id) { return logs.some(l => l.expense_id === id); }
+function entityShort(e) { return e === 'wynne' ? 'WYNNE' : e === 'thf' ? 'HOME FACTORY' : 'TAN WEI NEE'; }
+function fmtMYR(n) { return 'RM ' + n.toFixed(2); }
+function daysUntil(day) { return Math.round((new Date(thisYear, thisMonth, day) - today) / 86400000); }
+function expType(e) { return e.expense_type || 'recurring'; }
+
+function setType(type) {
+  selectedType = type;
+  document.getElementById('btn-rec').className = 'type-btn' + (type === 'recurring' ? ' active-rec' : '');
+  document.getElementById('btn-one').className = 'type-btn' + (type === 'onetime' ? ' active-one' : '');
+  document.getElementById('day-field').style.display = type === 'recurring' ? '' : 'none';
+  document.getElementById('date-field').style.display = type === 'onetime' ? '' : 'none';
+}
+
+function updateHeader() {
+  document.getElementById('month-label').textContent = MONTHS[thisMonth] + ' ' + thisYear;
+  const rec = expenses.filter(e => expType(e) === 'recurring');
+  const total = rec.reduce((s, e) => s + toMYR(e.amount, e.currency), 0);
+  document.getElementById('total-myr').textContent = fmtMYR(total) + '/月';
+  const done = rec.filter(e => isMarked(e.id)).length;
+  document.getElementById('progress-text').textContent = `${done} / ${rec.length} 已记账`;
+  document.getElementById('progress-fill').style.width = (rec.length ? Math.round(done / rec.length * 100) : 0) + '%';
+}
+
+function reminderCard(exp, cls, label, marked) {
+  const myr = toMYR(exp.amount, exp.currency);
+  const amtStr = exp.currency === 'MYR' ? fmtMYR(myr) : `${exp.currency} ${exp.amount}`;
+  const myrStr = exp.currency !== 'MYR' ? `<div class="reminder-myr">≈ ${fmtMYR(myr)}</div>` : '';
+  const action = marked
+    ? `<div class="done-label">✓ 已记账</div>`
+    : `<button class="btn-mark" onclick="openMark('${exp.id}')">记账 →</button>`;
+  return `<div class="reminder-card">
+    <div class="day-badge ${cls}">${label}</div>
+    <div class="reminder-info">
+      <div class="reminder-name">${exp.name}</div>
+      <div class="reminder-meta"><span class="entity-pill">${entityShort(exp.entity)}</span><span class="cat-pill">${exp.category}</span></div>
+    </div>
+    <div class="reminder-right">
+      <div class="reminder-amount">${amtStr}</div>${myrStr}${action}
+    </div>
+  </div>`;
+}
+
+function renderReminders() {
+  const rec = expenses.filter(e => expType(e) === 'recurring');
+  const one = expenses.filter(e => expType(e) === 'onetime' && !isMarked(e.id));
+  if (!rec.length && !one.length) {
+    document.getElementById('tab-reminders').innerHTML = '<div class="empty-state">暂无开支项目<br>请先在「开支」添加</div>';
+    return;
+  }
+  let html = '';
+  if (rec.length) {
+    html += '<div class="section-label">每月固定</div>';
+    rec.forEach(exp => {
+      const marked = isMarked(exp.id);
+      const d = daysUntil(exp.billing_day);
+      let cls, label;
+      if (marked) { cls = 'day-done'; label = '✓'; }
+      else if (d < 0) { cls = 'day-overdue'; label = d + 'd'; }
+      else if (d <= 3) { cls = 'day-soon'; label = d === 0 ? '今' : d + 'd'; }
+      else { cls = 'day-normal'; label = exp.billing_day + '日'; }
+      html += reminderCard(exp, cls, label, marked);
+    });
+  }
+  if (one.length) {
+    html += '<div class="section-label" style="margin-top:24px">一次性（待记账）</div>';
+    one.forEach(exp => { html += reminderCard(exp, 'day-onetime', '1×', false); });
+  }
+  document.getElementById('tab-reminders').innerHTML = html;
+}
+
+function renderExpenses() {
+  const groups = [['wynne','WYNNE CONSULTANCY GROUP PLT'],['thf','THE HOME FACTORY SDN. BHD.'],['twn','TAN WEI NEE']];
+  let html = '';
+  groups.forEach(([key, label]) => {
+    const items = expenses.filter(e => e.entity === key);
+    if (!items.length) return;
+    html += `<div class="section-label">${label}</div>`;
+    items.forEach(exp => {
+      const myr = toMYR(exp.amount, exp.currency);
+      const amtStr = exp.currency === 'MYR' ? fmtMYR(myr) : `${exp.currency} ${exp.amount} ≈ ${fmtMYR(myr)}`;
+      const isOne = expType(exp) === 'onetime';
+      html += `<div class="expense-item">
+        <div class="expense-top">
+          <div class="expense-name">${exp.name}${isOne ? '<span class="one-pill">一次性</span>' : ''}</div>
+          <div class="expense-amount">${amtStr}</div>
+        </div>
+        <div style="margin-top:6px"><span class="cat-pill">${exp.category}</span>${!isOne ? `<span style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:8px">每月 ${exp.billing_day} 日</span>` : ''}</div>
+        ${exp.note ? `<div style="font-size:11px;color:var(--text3);margin-top:5px">${exp.note}</div>` : ''}
+        <div class="expense-actions">
+          <button class="btn-sm" onclick="openMark('${exp.id}')">记账</button>
+          <button class="btn-sm danger" onclick="deleteExpense('${exp.id}')">删除</button>
+        </div>
+      </div>`;
+    });
+  });
+  if (!html) html = '<div style="color:var(--text3);font-size:12px;padding:8px 0">暂无项目</div>';
+  html += '<div class="add-row"><button class="btn-add" onclick="openModal(\'add-modal\')">+ 添加开支项目</button></div>';
+  document.getElementById('tab-expenses').innerHTML = html;
+}
+
+function renderLog() {
+  if (!logs.length) { document.getElementById('tab-log').innerHTML = '<div class="empty-state">本月暂无记账记录</div>'; return; }
+  let html = '<div class="section-label">本月记账记录</div>';
+  logs.forEach(l => {
+    const exp = expenses.find(e => e.id === l.expense_id) || { name: '(已删除)', entity: '', category: '' };
+    const isOne = expType(exp) === 'onetime';
+    html += `<div class="log-item">
+      <div>
+        <div class="log-name">${exp.name}${isOne ? '<span class="one-pill" style="margin-left:6px">一次性</span>' : ''}</div>
+        <div class="log-meta"><span class="entity-pill">${entityShort(exp.entity)}</span>${l.note ? ' · ' + l.note : ''}</div>
+      </div>
+      <div>
+        <div class="log-amount">${fmtMYR(l.myr_amount)}</div>
+        <div class="log-date">${l.log_date}${l.exchange_rate ? ' · 汇率 ' + l.exchange_rate : ''}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('tab-log').innerHTML = html;
+}
+
+function renderSummary() {
+  const rec = expenses.filter(e => expType(e) === 'recurring');
+  const byEntity = { wynne: 0, thf: 0, twn: 0 };
+  const byCat = {};
+  rec.forEach(e => {
+    const m = toMYR(e.amount, e.currency);
+    byEntity[e.entity] += m;
+    byCat[e.category] = (byCat[e.category] || 0) + m;
+  });
+  const total = Object.values(byEntity).reduce((a, b) => a + b, 0);
+  let html = '<div class="section-label">月度固定（按实体）</div>';
+  [['wynne','WYNNE PLT'],['thf','HOME FACTORY'],['twn','TAN WEI NEE']].forEach(([k,l]) => {
+    if (!byEntity[k]) return;
+    html += `<div class="summary-row"><span class="summary-label">${l}</span><span class="summary-val">${fmtMYR(byEntity[k])}</span></div>`;
+  });
+  html += `<div class="summary-row" style="border-top:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2);font-weight:500">月度合计</span><span class="summary-val">${fmtMYR(total)}</span></div>`;
+  if (Object.keys(byCat).length) {
+    html += '<div class="section-label">月度固定（按类别）</div>';
+    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
+      html += `<div class="summary-row"><span class="summary-label">${cat}</span><span class="summary-val">${fmtMYR(amt)}</span></div>`;
+    });
+  }
+  const logTotal = logs.reduce((s, l) => s + l.myr_amount, 0);
+  const oneTotal = logs.filter(l => { const e = expenses.find(x => x.id === l.expense_id); return e && expType(e) === 'onetime'; }).reduce((s,l)=>s+l.myr_amount,0);
+  html += '<div class="section-label">本月实际记账</div>';
+  html += `<div class="summary-row"><span class="summary-label">固定开支</span><span style="font-family:var(--mono);font-size:13px;color:var(--success)">${fmtMYR(logTotal - oneTotal)}</span></div>`;
+  if (oneTotal > 0) html += `<div class="summary-row"><span class="summary-label">一次性开支</span><span style="font-family:var(--mono);font-size:13px;color:#8888ff">${fmtMYR(oneTotal)}</span></div>`;
+  html += `<div class="summary-row"><span style="font-size:13px;color:var(--text2);font-weight:500">本月合计</span><span style="font-family:var(--mono);font-size:13px;color:var(--success);font-weight:500">${fmtMYR(logTotal)}</span></div>`;
+  document.getElementById('tab-summary').innerHTML = html;
+}
+
+function renderAll() { updateHeader(); renderReminders(); renderExpenses(); renderLog(); renderSummary(); }
+
+function switchTab(t) {
+  ['reminders','expenses','log','summary'].forEach(id => { document.getElementById('tab-' + id).style.display = id === t ? '' : 'none'; });
+  document.querySelectorAll('.tab').forEach((btn, i) => { btn.classList.toggle('active', ['reminders','expenses','log','summary'][i] === t); });
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function openMark(expId) {
+  markingId = expId;
+  const exp = expenses.find(e => e.id === expId);
+  document.getElementById('mark-title').textContent = '记账：' + exp.name;
+  document.getElementById('m-amount').value = toMYR(exp.amount, exp.currency).toFixed(2);
+  document.getElementById('m-rate').value = exp.currency === 'USD' ? USD_MYR : exp.currency === 'SGD' ? SGD_MYR : '';
+  document.getElementById('m-date').value = today.toISOString().split('T')[0];
+  document.getElementById('m-note').value = '';
+  openModal('mark-modal');
+}
+
+async function saveExpense() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('请填写开支名称'); return; }
+  const isOne = selectedType === 'onetime';
+  try {
+    const res = await api('POST', 'expenses', {
+      name, entity: document.getElementById('f-entity').value,
+      category: document.getElementById('f-cat').value,
+      amount: parseFloat(document.getElementById('f-amount').value) || 0,
+      currency: document.getElementById('f-currency').value,
+      billing_day: isOne ? 1 : (parseInt(document.getElementById('f-day').value) || 1),
+      note: document.getElementById('f-note').value.trim(),
+      expense_type: selectedType
+    });
+    expenses.push(res[0]);
+    expenses.sort((a,b) => a.billing_day - b.billing_day);
+    closeModal('add-modal');
+    renderAll();
+    showToast('已添加：' + name);
+  } catch(e) { showToast('保存失败'); }
+}
+
+async function saveMark() {
+  if (!markingId) return;
+  try {
+    const res = await api('POST', 'expense_logs', {
+      expense_id: markingId,
+      log_date: document.getElementById('m-date').value,
+      myr_amount: parseFloat(document.getElementById('m-amount').value) || 0,
+      exchange_rate: parseFloat(document.getElementById('m-rate').value) || null,
+      note: document.getElementById('m-note').value.trim()
+    });
+    logs.unshift(res[0]);
+    // 一次性开支记账后自动从列表移除
+    const exp = expenses.find(e => e.id === markingId);
+    if (exp && expType(exp) === 'onetime') {
+      await api('DELETE', 'expenses', null, `id=eq.${markingId}`);
+      expenses = expenses.filter(e => e.id !== markingId);
+    }
+    closeModal('mark-modal');
+    renderAll();
+    showToast('记账成功');
+  } catch(e) { showToast('保存失败'); }
+  markingId = null;
+}
+
+async function deleteExpense(id) {
+  const exp = expenses.find(e => e.id === id);
+  if (!confirm(`确认删除「${exp.name}」？`)) return;
+  try {
+    await api('DELETE', 'expenses', null, `id=eq.${id}`);
+    expenses = expenses.filter(e => e.id !== id);
+    renderAll(); showToast('已删除');
+  } catch(e) { showToast('删除失败'); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function init() {
+  document.getElementById('tab-reminders').innerHTML = '<div class="loading">加载中...</div>';
+  await loadData();
+  if (expenses.length === 0) {
+    try {
+      const res = await api('POST', 'expenses', { name: 'Claude Pro 订阅', entity: 'thf', category: '软件订阅', amount: 20, currency: 'USD', billing_day: 24, note: '', expense_type: 'recurring' });
+      expenses = res;
+    } catch(e) {}
+  }
+  renderAll();
+  document.getElementById('f-date').value = today.toISOString().split('T')[0];
+}
+
+init();
+</script>
+</body>
+</html>
