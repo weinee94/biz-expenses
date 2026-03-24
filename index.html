@@ -395,8 +395,8 @@ function dueThisMo(e){
   if(f==='triennial') return parseInt(e.due_month)===thisMonth+1;
   return false;
 }
-function tpillCls(p){return p===100?'p-t100':p===50?'p-t50':'p-t0';}
-function tpillLbl(p){return p===100?'100%':p===50?'50%':'不可抵';}
+function tpillCls(p){return p===100?'p-t100':p===50?'p-t50':p===0?'p-t0':'p-t50';}
+function tpillLbl(p){return p===100?'100%':p===50?'50%':p===0?'不可抵':p+'%';}
 
 // Header
 function updateHeader(){
@@ -581,7 +581,7 @@ async function renderReport(){
   Object.entries(bc).sort((a,b)=>b[1].total-a[1].total).forEach(([cat,data])=>{
     const info=TCATS[cat]||{zh:cat,pct:100};
     const bw=Math.round(data.total/maxV*100);
-    h+=`<div class="rpt-row"><div class="rpt-row-top"><div><div class="rpt-cat">${info.zh}</div><div class="rpt-cat-en">${cat}</div></div><div><div class="rpt-val">${fmt(data.total)}</div>${info.pct>0?`<div class="rpt-ded">可抵 ${fmt(data.ded)}</div>`:''}</div></div><div class="rpt-bar"><div class="rpt-bar-fill" style="width:${bw}%"></div></div></div>`;
+    h+=`<div class="rpt-row"><div class="rpt-row-top"><div><div class="rpt-cat">${info.zh}</div><div class="rpt-cat-en">${cat}</div></div><div><div class="rpt-val">${fmt(data.total)}</div>${data.ded>0?`<div class="rpt-ded">可抵 ${fmt(data.ded)}</div>`:''}</div></div><div class="rpt-bar"><div class="rpt-bar-fill" style="width:${bw}%"></div></div></div>`;
   });
   h+='</div>';
   // Download buttons
@@ -618,7 +618,7 @@ async function renderTax(){
   h+='<div class="slabel">按 LHDN 税务类别</div>';
   Object.entries(bc).sort((a,b)=>b[1].total-a[1].total).forEach(([cat,data])=>{
     const info=TCATS[cat]||{zh:cat,pct:100};
-    h+=`<div class="tc"><div><div class="tc-name">${info.zh}</div><div class="tc-code">${cat}</div></div><div><div class="tc-amt">${fmt(data.total)}</div>${info.pct>0?`<div class="tc-ded">可抵 ${fmt(data.ded)}</div>`:`<div style="font-size:11px;color:var(--text3)">Capital Allowance</div>`}</div></div>`;
+    h+=`<div class="tc"><div><div class="tc-name">${info.zh}</div><div class="tc-code">${cat}</div></div><div><div class="tc-amt">${fmt(data.total)}</div>${data.ded>0?`<div class="tc-ded">可抵 ${fmt(data.ded)}</div>`:`<div style="font-size:11px;color:var(--text3)">Capital Allowance / 0%</div>`}</div></div>`;
   });
   h+=`<div class="tax-foot">数据可直接交会计参考 · 请保留所有收据至少 7 年</div>`;
   document.getElementById('tab-tax').innerHTML=h;
@@ -642,7 +642,9 @@ function openEdit(id){
   document.getElementById('add-modal-title').textContent='编辑开支项目';
   document.getElementById('f-name').value=e.name;
   document.getElementById('f-entity').value=ekey(e.entity);
-  document.getElementById('f-taxcat').value=e.tax_category||'Miscellaneous';
+  const tcEl=document.getElementById('f-taxcat');
+  tcEl.value=e.tax_category||'Miscellaneous';
+  if(!tcEl.value||tcEl.selectedIndex<0) tcEl.value='Miscellaneous';
   document.getElementById('f-amount').value=e.amount;
   document.getElementById('f-currency').value=e.currency||'MYR';
   document.getElementById('f-note').value=e.note||'';
