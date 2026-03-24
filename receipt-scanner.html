@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>单据识别结果</title>
+<title>单据识别</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -13,69 +13,84 @@
   --green:#1a7a3a;--green-bg:#eef7f1;
   --amber:#946000;--amber-bg:#fdf5e4;
   --red:#c0392b;--red-bg:#fdf0ee;
+  --blue:#1a4a8a;--blue-bg:#edf2fc;
   --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
   --r:12px;--rs:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;padding:24px 16px 48px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;padding:24px 16px 60px}
 .wrap{max-width:460px;margin:0 auto}
-
 .title{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
 .subtitle{font-size:13px;color:var(--text3);font-family:var(--mono);margin-bottom:24px}
 
 /* Steps */
-.steps-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:20px}
-.step{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.how{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:20px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)}
 .step:last-child{border-bottom:none}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--text);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.step-text{font-size:14px;color:var(--text2);line-height:1.5}
-.step-text strong{color:var(--text);font-weight:500}
+.sn{width:22px;height:22px;border-radius:50%;background:var(--text);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.st{font-size:13px;color:var(--text2);line-height:1.5}
+.st strong{color:var(--text);font-weight:500}
 
-/* Paste area */
-.paste-label{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.04em;margin-bottom:8px;display:block}
-.paste-area{width:100%;min-height:120px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;resize:vertical;transition:border-color .15s;margin-bottom:10px}
+/* Entity selector */
+.section-label{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.04em;margin-bottom:8px;display:block}
+.ent-group{display:flex;background:var(--surface2);border-radius:10px;padding:3px;gap:2px;margin-bottom:20px}
+.ent-btn{flex:1;font-size:13px;font-weight:500;padding:9px 4px;border-radius:8px;border:none;background:none;color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--sans);text-align:center}
+.ent-btn.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.ent-sub{font-size:10px;font-family:var(--mono);opacity:.6;display:block;margin-top:1px}
+
+/* Paste */
+.paste-area{width:100%;min-height:110px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;resize:vertical;transition:border-color .15s;margin-bottom:10px}
 .paste-area:focus{border-color:var(--text2)}
 .paste-area::placeholder{color:var(--text3)}
 .parse-btn{width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:20px;transition:opacity .15s}
 .parse-btn:hover{opacity:.85}
 
-/* Result card */
-.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
-.result-header{padding:14px 16px;background:var(--text);color:#fff;display:flex;justify-content:space-between;align-items:center}
-.result-name{font-size:16px;font-weight:600}
-.result-date{font-size:12px;opacity:.6;font-family:var(--mono)}
-.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px}
-.result-row:last-child{border-bottom:none}
-.rkey{font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;padding-top:2px}
-.rval{font-size:14px;font-weight:500;text-align:right;flex:1}
-.rval.big{font-size:18px;font-weight:600;color:var(--green)}
+/* Result */
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.rh{padding:16px;background:var(--text);color:#fff}
+.rh-name{font-size:17px;font-weight:600;margin-bottom:2px}
+.rh-date{font-size:12px;opacity:.55;font-family:var(--mono)}
+.rrow{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px}
+.rrow:last-child{border-bottom:none}
+.rk{font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0;padding-top:3px}
+.rv{font-size:14px;font-weight:500;text-align:right;flex:1}
+.rv.big{font-size:20px;font-weight:600;color:var(--green)}
 .pill{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
-.p-green{background:var(--green-bg);color:var(--green)}
-.p-amber{background:var(--amber-bg);color:var(--amber)}
-.p-red{background:var(--red-bg);color:var(--red)}
-.p-gray{background:var(--surface2);color:var(--text2)}
+.pg{background:var(--green-bg);color:var(--green)}
+.pa{background:var(--amber-bg);color:var(--amber)}
+.pr{background:var(--red-bg);color:var(--red)}
+.pb{background:var(--blue-bg);color:var(--blue)}
 
-/* Field copy buttons */
-.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.field-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s}
-.field-btn:hover{border-color:var(--text2);background:var(--surface2)}
-.field-btn:active{transform:scale(.97)}
-.fb-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
-.fb-val{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Edit fields */
+.edit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.edit-title{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.04em;margin-bottom:12px}
+.edit-row{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.edit-row:last-child{margin-bottom:0}
+.el{font-size:12px;color:var(--text3);font-family:var(--mono);width:72px;flex-shrink:0}
+.ei{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none}
+.ei:focus{border-color:var(--text2)}
+select.ei option{background:var(--surface)}
 
 /* Actions */
-.action-row{display:flex;gap:10px;margin-bottom:20px}
-.copy-all-btn{flex:1;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
-.copy-all-btn:hover{opacity:.85}
-.reset-btn{padding:13px 18px;background:none;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:14px;font-weight:500;color:var(--text2);cursor:pointer}
+.confirm-btn{width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.confirm-btn:hover{opacity:.85}
+.confirm-btn:disabled{opacity:.4;cursor:not-allowed}
+.reset-btn{width:100%;padding:12px;background:none;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;margin-bottom:20px}
 
-/* App link */
+/* Success */
+.success-box{background:var(--green-bg);border:1px solid #b0dfc0;border-radius:var(--r);padding:20px;text-align:center;margin-bottom:20px}
+.success-icon{font-size:36px;margin-bottom:8px}
+.success-title{font-size:17px;font-weight:600;color:var(--green);margin-bottom:4px}
+.success-sub{font-size:13px;color:var(--green);opacity:.7}
+
 .app-link{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;color:var(--text)}
 .al-main{font-size:14px;font-weight:500}
 .al-sub{font-size:12px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
 
-/* Error */
-.err{background:var(--red-bg);border:1px solid #f5c0b8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px}
+.err{background:var(--red-bg);border:1px solid #f5c0b8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:14px}
+
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border-radius:20px;padding:10px 22px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:100}
 .toast.show{opacity:1}
@@ -83,50 +98,110 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 </head>
 <body>
 <div class="wrap">
-  <div class="title">📋 单据识别结果</div>
-  <div class="subtitle">将 Claude 的识别结果贴入，一键填入开支系统</div>
+  <div class="title">📋 单据识别记账</div>
+  <div class="subtitle">贴入 Claude 识别结果 → 确认 → 直接记账</div>
 
-  <!-- How to use -->
-  <div class="steps-card">
-    <div class="step"><div class="step-num">1</div><div class="step-text">在 <strong>Claude 对话</strong>上传单据图片</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-text">Claude 返回 JSON 数据，<strong>全选复制</strong></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-text">贴到下方文字框，点<strong>解析</strong></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-text">点各字段按钮复制，填入<strong>开支系统</strong>记账</div></div>
+  <!-- How to -->
+  <div class="how">
+    <div class="step"><div class="sn">1</div><div class="st">在 <strong>Claude 对话</strong>上传单据图片，获得 JSON</div></div>
+    <div class="step"><div class="sn">2</div><div class="st">选择<strong>所属实体</strong>，贴入 JSON</div></div>
+    <div class="step"><div class="sn">3</div><div class="st">检查识别结果，按需修改</div></div>
+    <div class="step"><div class="sn">4</div><div class="st">点<strong>确认记账</strong>，直接写入系统</div></div>
   </div>
 
-  <!-- Paste input -->
-  <label class="paste-label">贴入 Claude 返回的 JSON</label>
-  <textarea class="paste-area" id="json-input" placeholder='{"name":"餐饮","date":"2026-03-24","amount":85.50,"currency":"MYR","myr_amount":85.50,"tax_category":"Entertainment","tax_deductible":50,"entity":"twn","note":""}'>
-  </textarea>
-  <button class="parse-btn" onclick="parseJSON()">解析识别结果</button>
+  <!-- Input section -->
+  <div id="input-section">
+    <!-- Entity selector -->
+    <label class="section-label">所属实体</label>
+    <div class="ent-group">
+      <button class="ent-btn" id="ent-wynne" onclick="setEnt('wynne')">WYNNE<span class="ent-sub">PLT</span></button>
+      <button class="ent-btn on" id="ent-thf" onclick="setEnt('thf')">THF<span class="ent-sub">SDN BHD</span></button>
+      <button class="ent-btn" id="ent-twn" onclick="setEnt('twn')">TWN<span class="ent-sub">个人</span></button>
+    </div>
+
+    <!-- JSON paste -->
+    <label class="section-label">贴入 Claude 的 JSON 识别结果</label>
+    <textarea class="paste-area" id="json-input" placeholder='{"name":"餐饮","date":"2026-03-24","amount":85.50,"currency":"MYR","myr_amount":85.50,"tax_category":"Entertainment","tax_deductible":50,"entity":"twn","note":""}'></textarea>
+    <button class="parse-btn" onclick="parseJSON()">解析</button>
+  </div>
 
   <!-- Error -->
   <div id="err-box" class="err" style="display:none"></div>
 
-  <!-- Result -->
+  <!-- Result + Edit -->
   <div id="result-section" style="display:none">
 
+    <!-- Summary card -->
     <div class="result-card" id="result-card"></div>
 
-    <div class="fields-grid" id="fields-grid"></div>
-
-    <div class="action-row">
-      <button class="copy-all-btn" onclick="copyAll()">复制全部字段</button>
-      <button class="reset-btn" onclick="resetAll()">清除</button>
+    <!-- Editable fields -->
+    <div class="edit-card">
+      <div class="edit-title">检查并修改</div>
+      <div class="edit-row"><span class="el">名称</span><input class="ei" id="e-name"></div>
+      <div class="edit-row"><span class="el">日期</span><input class="ei" id="e-date" type="date"></div>
+      <div class="edit-row"><span class="el">金额 RM</span><input class="ei" id="e-amount" type="number" step="0.01"></div>
+      <div class="edit-row"><span class="el">实体</span>
+        <select class="ei" id="e-entity">
+          <option value="wynne">WYNNE CONSULTANCY GROUP PLT</option>
+          <option value="thf">THE HOME FACTORY SDN. BHD.</option>
+          <option value="twn">TAN WEI NEE</option>
+        </select>
+      </div>
+      <div class="edit-row"><span class="el">税务类别</span>
+        <select class="ei" id="e-taxcat">
+          <option value="Salaries & EPF/SOCSO/EIS">薪资与供款</option>
+          <option value="Professional Fees">专业服务费</option>
+          <option value="Rental">租金</option>
+          <option value="Software & Subscriptions">软件订阅</option>
+          <option value="Telephone & Internet">电话与网络</option>
+          <option value="Travelling & Transportation">差旅交通</option>
+          <option value="Entertainment">招待娱乐 (50%)</option>
+          <option value="Advertisement & Marketing">广告营销</option>
+          <option value="Repairs & Maintenance">维修保养</option>
+          <option value="Utilities">公用事业</option>
+          <option value="Bank Charges">银行手续费</option>
+          <option value="Insurance">保险</option>
+          <option value="Govt Fees & Licences">政府规费</option>
+          <option value="Training & Development">培训进修</option>
+          <option value="Printing & Stationery">印刷文具</option>
+          <option value="Donations">捐款</option>
+          <option value="Capital Expenditure">资本开支</option>
+          <option value="Miscellaneous">其他</option>
+        </select>
+      </div>
+      <div class="edit-row"><span class="el">备注</span><input class="ei" id="e-note" placeholder="可选"></div>
     </div>
 
+    <button class="confirm-btn" id="confirm-btn" onclick="confirmRecord()">
+      <span id="confirm-label">确认记账</span>
+    </button>
+    <button class="reset-btn" onclick="resetAll()">重新扫描</button>
+  </div>
+
+  <!-- Success -->
+  <div id="success-section" style="display:none">
+    <div class="success-box">
+      <div class="success-icon">✓</div>
+      <div class="success-title">记账成功</div>
+      <div class="success-sub" id="success-sub"></div>
+    </div>
     <a class="app-link" href="https://weinee94.github.io/biz-expenses" target="_blank">
       <div>
-        <div class="al-main">前往开支系统记账 →</div>
+        <div class="al-main">查看开支系统</div>
         <div class="al-sub">weinee94.github.io/biz-expenses</div>
       </div>
+      <div style="color:var(--text3);font-size:18px">→</div>
     </a>
+    <button class="reset-btn" style="margin-top:12px" onclick="resetAll()">继续扫描下一张</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+const SUPA_URL='https://artigtysbyfiqgmskcsu.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydGlndHlzYnlmaXFnbXNrY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjQwMDQsImV4cCI6MjA4OTkwMDAwNH0.eaAz4R-xcDJFgzqMD3CRdQ6sCAreonR0z2lv1teor0U';
+
 const TAX_ZH={
   'Salaries & EPF/SOCSO/EIS':'薪资与供款','Professional Fees':'专业服务费',
   'Rental':'租金','Software & Subscriptions':'软件订阅',
@@ -138,95 +213,168 @@ const TAX_ZH={
   'Printing & Stationery':'印刷文具','Donations':'捐款',
   'Capital Expenditure':'资本开支','Miscellaneous':'其他'
 };
-const ENT_ZH={wynne:'WYNNE PLT',thf:'THE HOME FACTORY (THF)',twn:'TAN WEI NEE (TWN)'};
+const ENT_FULL={wynne:'WYNNE PLT',thf:'THF',twn:'TWN'};
+const TAX_PCT={'Entertainment':50,'Capital Expenditure':0};
 const FMT=n=>'RM '+parseFloat(n).toFixed(2);
+const today=new Date().toISOString().split('T')[0];
 
-let data=null;
+let selEnt='thf';
+let parsedData=null;
 
+// Entity selector
+function setEnt(e){
+  selEnt=e;
+  ['wynne','thf','twn'].forEach(x=>{
+    document.getElementById('ent-'+x).className='ent-btn'+(x===e?' on':'');
+  });
+}
+
+// Supabase API
+async function supaPost(table,body){
+  const res=await fetch(`${SUPA_URL}/rest/v1/${table}`,{
+    method:'POST',
+    headers:{
+      'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
+      'Content-Type':'application/json','Prefer':'return=representation'
+    },
+    body:JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+// First check if a matching expense exists, or create one-time expense
+async function getOrCreateExpense(data){
+  // Search for existing expense with same name and entity
+  const res=await fetch(`${SUPA_URL}/rest/v1/expenses?name=eq.${encodeURIComponent(data.name)}&entity=eq.${data.entity}&select=id`,{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  });
+  const existing=await res.json();
+  if(existing&&existing.length>0) return existing[0].id;
+
+  // Create new one-time expense entry
+  const created=await supaPost('expenses',{
+    name:data.name,
+    entity:data.entity,
+    category:data.tax_category,
+    tax_category:data.tax_category,
+    tax_deductible:data.tax_deductible,
+    amount:data.myr_amount,
+    currency:'MYR',
+    billing_day:1,
+    frequency:'onetime',
+    expense_type:'onetime',
+    note:data.note||''
+  });
+  return created[0].id;
+}
+
+// Parse JSON
 function parseJSON(){
   const raw=document.getElementById('json-input').value.trim();
   document.getElementById('err-box').style.display='none';
   try{
     let clean=raw.replace(/```json|```/g,'').trim();
-    data=JSON.parse(clean);
-    showResult(data);
+    parsedData=JSON.parse(clean);
+    // Override entity with user selection
+    parsedData.entity=selEnt;
+    // Auto-fix tax deductible based on category
+    if(TAX_PCT[parsedData.tax_category]!==undefined){
+      parsedData.tax_deductible=TAX_PCT[parsedData.tax_category];
+    }
+    showResult(parsedData);
   }catch(e){
-    document.getElementById('err-box').textContent='JSON 格式有误，请检查是否完整复制了 Claude 的输出。';
-    document.getElementById('err-box').style.display='';
-    document.getElementById('result-section').style.display='none';
+    showErr('JSON 格式有误，请检查是否完整复制了 Claude 的输出。');
   }
 }
 
 function showResult(d){
   const taxZh=TAX_ZH[d.tax_category]||d.tax_category;
-  const entZh=ENT_ZH[d.entity]||d.entity;
   const pct=d.tax_deductible;
-  const pCls=pct===100?'p-green':pct===50?'p-amber':'p-red';
-  const amtStr=d.currency!=='MYR'?`${d.currency} ${d.amount} ≈ ${FMT(d.myr_amount)}`:FMT(d.myr_amount);
+  const pCls=pct===100?'pg':pct===50?'pa':'pr';
+  const amtStr=d.currency&&d.currency!=='MYR'?`${d.currency} ${d.amount} ≈ ${FMT(d.myr_amount)}`:FMT(d.myr_amount);
 
   document.getElementById('result-card').innerHTML=`
-    <div class="result-header">
-      <div class="result-name">${d.name}</div>
-      <div class="result-date">${d.date}</div>
+    <div class="rh">
+      <div class="rh-name">${d.name}</div>
+      <div class="rh-date">${d.date} · ${ENT_FULL[d.entity]||d.entity}</div>
     </div>
-    <div class="result-row"><span class="rkey">金额</span><span class="rval big">${amtStr}</span></div>
-    <div class="result-row"><span class="rkey">税务类别</span><span class="rval">${taxZh}<br><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${d.tax_category}</span></span></div>
-    <div class="result-row"><span class="rkey">可抵税</span><span class="rval"><span class="pill ${pCls}">${pct}%</span></span></div>
-    <div class="result-row"><span class="rkey">实体</span><span class="rval"><span class="pill p-gray">${entZh}</span></span></div>
-    ${d.note?`<div class="result-row"><span class="rkey">备注</span><span class="rval" style="color:var(--text2)">${d.note}</span></div>`:''}
+    <div class="rrow"><span class="rk">金额</span><span class="rv big">${amtStr}</span></div>
+    <div class="rrow"><span class="rk">税务类别</span><span class="rv">${taxZh}<br><span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${d.tax_category}</span></span></div>
+    <div class="rrow"><span class="rk">可抵税</span><span class="rv"><span class="pill ${pCls}">${pct}%</span></span></div>
+    ${d.note?`<div class="rrow"><span class="rk">备注</span><span class="rv" style="color:var(--text2)">${d.note}</span></div>`:''}
   `;
 
-  // Individual copy buttons
-  const fields=[
-    {label:'名称',val:d.name},
-    {label:'日期',val:d.date},
-    {label:'金额 (MYR)',val:parseFloat(d.myr_amount).toFixed(2)},
-    {label:'汇率',val:d.currency!=='MYR'?String(({'USD':4.45,'SGD':3.10,'EUR':4.90})[d.currency]||''):''},
-    {label:'税务类别',val:d.tax_category},
-    {label:'实体',val:d.entity},
-    {label:'备注',val:d.note||''},
-  ].filter(f=>f.val!=='');
+  // Fill edit fields
+  document.getElementById('e-name').value=d.name;
+  document.getElementById('e-date').value=d.date||today;
+  document.getElementById('e-amount').value=parseFloat(d.myr_amount).toFixed(2);
+  document.getElementById('e-entity').value=d.entity;
+  document.getElementById('e-taxcat').value=d.tax_category;
+  document.getElementById('e-note').value=d.note||'';
 
-  document.getElementById('fields-grid').innerHTML=fields.map(f=>`
-    <button class="field-btn" onclick="copyField('${f.val.replace(/'/g,"\\'")}','${f.label}')">
-      <div class="fb-label">${f.label}</div>
-      <div class="fb-val">${f.val}</div>
-    </button>
-  `).join('');
-
+  document.getElementById('input-section').style.display='none';
   document.getElementById('result-section').style.display='';
+  document.getElementById('success-section').style.display='none';
 }
 
-function copyField(val,label){
-  navigator.clipboard.writeText(val).then(()=>showToast(label+' 已复制'));
-}
+async function confirmRecord(){
+  const btn=document.getElementById('confirm-btn');
+  const lbl=document.getElementById('confirm-label');
+  btn.disabled=true;
+  lbl.innerHTML='<div class="spinner"></div>';
 
-function copyAll(){
-  if(!data) return;
-  const lines=[
-    `名称：${data.name}`,
-    `日期：${data.date}`,
-    `金额：${data.currency} ${data.amount}`,
-    `马币：${FMT(data.myr_amount)}`,
-    `税务类别：${data.tax_category}`,
-    `可抵税：${data.tax_deductible}%`,
-    `实体：${data.entity}`,
-    data.note?`备注：${data.note}`:''
-  ].filter(Boolean).join('\n');
-  navigator.clipboard.writeText(lines).then(()=>showToast('全部字段已复制'));
+  const name=document.getElementById('e-name').value.trim();
+  const date=document.getElementById('e-date').value;
+  const amount=parseFloat(document.getElementById('e-amount').value)||0;
+  const entity=document.getElementById('e-entity').value;
+  const taxCat=document.getElementById('e-taxcat').value;
+  const note=document.getElementById('e-note').value.trim();
+  const taxPct=TAX_PCT[taxCat]!==undefined?TAX_PCT[taxCat]:100;
+
+  try{
+    // Get or create expense record
+    const expId=await getOrCreateExpense({name,entity,tax_category:taxCat,tax_deductible:taxPct,myr_amount:amount,note});
+
+    // Create log entry
+    await supaPost('expense_logs',{
+      expense_id:expId,
+      log_date:date,
+      myr_amount:amount,
+      exchange_rate:null,
+      note:note
+    });
+
+    document.getElementById('success-sub').textContent=`${name} · ${FMT(amount)} · ${date}`;
+    document.getElementById('result-section').style.display='none';
+    document.getElementById('success-section').style.display='';
+    showToast('记账成功');
+  }catch(e){
+    showErr('记账失败：'+e.message);
+    btn.disabled=false;
+    lbl.textContent='确认记账';
+  }
 }
 
 function resetAll(){
-  data=null;
+  parsedData=null;
   document.getElementById('json-input').value='';
-  document.getElementById('result-section').style.display='none';
   document.getElementById('err-box').style.display='none';
+  document.getElementById('input-section').style.display='';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('success-section').style.display='none';
+  document.getElementById('confirm-btn').disabled=false;
+  document.getElementById('confirm-label').textContent='确认记账';
 }
 
+function showErr(msg){
+  const el=document.getElementById('err-box');
+  el.textContent=msg;el.style.display='';
+}
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2000);
+  setTimeout(()=>t.classList.remove('show'),2500);
 }
 </script>
 </body>
