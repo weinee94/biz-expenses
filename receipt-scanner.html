@@ -148,7 +148,7 @@ select.ei option{background:var(--surface)}
         </select>
       </div>
       <div class="edit-row"><span class="el">税务类别</span>
-        <select class="ei" id="e-taxcat">
+        <select class="ei" id="e-taxcat" onchange="onTaxCatChange(this.value)">
           <option value="Salaries & EPF/SOCSO/EIS">薪资与供款</option>
           <option value="Professional Fees">专业服务费</option>
           <option value="Rental">租金</option>
@@ -165,10 +165,17 @@ select.ei option{background:var(--surface)}
           <option value="Training & Development">培训进修</option>
           <option value="Printing & Stationery">印刷文具</option>
           <option value="Donations">捐款</option>
-          <option value="Capital Expenditure">资本开支</option>
-          <option value="Miscellaneous">其他</option>
+          <option value="Staff Welfare">员工福利</option>
+          <option value="General & Administrative Expenses">行政杂费</option>
+          <option value="Site Upkeep & Safety">工地维护安全</option>
+          <option value="Subcontractor Payments">外包工程费</option>
+          <option value="Motor Vehicle Expenses">车辆费用 (67%)</option>
+          <option value="Interest & Financing Charges">利息融资费</option>
+          <option value="Capital Expenditure">资本开支 (0%)</option>
+          <option value="Miscellaneous">其他杂项</option>
         </select>
       </div>
+      <div class="edit-row"><span class="el">可抵税%</span><input class="ei" id="e-taxpct" type="number" min="0" max="100" placeholder="自动填入"></div>
       <div class="edit-row"><span class="el">备注</span><input class="ei" id="e-note" placeholder="可选"></div>
     </div>
 
@@ -217,7 +224,7 @@ const TAX_ZH={
   'Capital Expenditure':'资本开支','Miscellaneous':'其他杂项'
 };
 const ENT_FULL={wynne:'WYNNE PLT',thf:'THF',twn:'TWN'};
-const TAX_PCT={'Entertainment':50,'Capital Expenditure':0};
+const TAX_PCT={'Entertainment':50,'Capital Expenditure':0,'Motor Vehicle Expenses':67};
 const FMT=n=>'RM '+parseFloat(n).toFixed(2);
 const today=new Date().toISOString().split('T')[0];
 
@@ -291,6 +298,11 @@ function parseJSON(){
   }
 }
 
+function onTaxCatChange(cat){
+  const pct=TAX_PCT[cat]!==undefined?TAX_PCT[cat]:100;
+  document.getElementById('e-taxpct').value=pct;
+}
+
 function showResult(d){
   const taxZh=TAX_ZH[d.tax_category]||d.tax_category;
   const pct=d.tax_deductible;
@@ -313,7 +325,10 @@ function showResult(d){
   document.getElementById('e-date').value=d.date||today;
   document.getElementById('e-amount').value=parseFloat(d.myr_amount).toFixed(2);
   document.getElementById('e-entity').value=d.entity;
-  document.getElementById('e-taxcat').value=d.tax_category;
+  const tcEl=document.getElementById('e-taxcat');
+  tcEl.value=d.tax_category;
+  if(!tcEl.value||tcEl.selectedIndex<0) tcEl.value='Miscellaneous';
+  document.getElementById('e-taxpct').value=d.tax_deductible!==undefined?d.tax_deductible:'';
   document.getElementById('e-note').value=d.note||'';
 
   document.getElementById('input-section').style.display='none';
@@ -333,7 +348,8 @@ async function confirmRecord(){
   const entity=document.getElementById('e-entity').value;
   const taxCat=document.getElementById('e-taxcat').value;
   const note=document.getElementById('e-note').value.trim();
-  const taxPct=TAX_PCT[taxCat]!==undefined?TAX_PCT[taxCat]:100;
+  const taxPctRaw=document.getElementById('e-taxpct').value;
+  const taxPct=taxPctRaw!==''?parseInt(taxPctRaw):(TAX_PCT[taxCat]!==undefined?TAX_PCT[taxCat]:100);
 
   try{
     // Get or create expense record

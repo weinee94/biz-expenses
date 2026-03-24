@@ -760,8 +760,8 @@ async function delLog(id){
 }
 
 function getRptMeta(){
-  const periodLbl=rptPeriod==='month'?MO[thisMonth]+' '+thisYear:rptYear+'年';
-  const entName=rptEnt==='all'?'全部实体':(ENT[rptEnt]||{}).f||rptEnt;
+  const periodLbl=rptPeriod==='month'?MO[thisMonth]+' '+thisYear:rptYear;
+  const entName=rptEnt==='all'?'All Entities':(ENT[rptEnt]||{}).f||rptEnt;
   const fn=rptPeriod==='month'?`${thisYear}-${String(thisMonth+1).padStart(2,'0')}`:rptYear;
   return {periodLbl,entName,fn};
 }
@@ -769,7 +769,11 @@ function getRptMeta(){
 function buildRows(withHeader=true){
   const rows=withHeader?[['日期','名称','实体','税务类别 (LHDN)','可抵税%','金额 RM','汇率','可抵税金额 RM','备注']]:[];
   let gt=0,gd=0;
-  rptLogs.forEach(l=>{
+  const logsToUse=rptEnt==='all'?rptLogs:rptLogs.filter(l=>{
+    const e=expenses.find(x=>x.id===l.expense_id);
+    return e&&ekey(e.entity)===rptEnt;
+  });
+  logsToUse.forEach(l=>{
     const e=expenses.find(x=>x.id===l.expense_id)||{name:'(已删除)',entity:'',tax_category:'Miscellaneous',tax_deductible:100};
     const pct=tpct(e),ded=l.myr_amount*pct/100;
     gt+=l.myr_amount;gd+=ded;
@@ -828,6 +832,7 @@ function downloadXLSX(){
 function downloadPDF(){
   if(!rptLogs||!rptLogs.length){alert('暂无数据');return;}
   const {periodLbl,entName,fn}=getRptMeta();
+  const filteredForPDF=rptEnt==='all'?rptLogs:rptLogs.filter(l=>{const e=expenses.find(x=>x.id===l.expense_id);return e&&ekey(e.entity)===rptEnt;});
   const script=document.createElement('script');
   script.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
   script.onload=()=>{
@@ -841,20 +846,22 @@ function downloadPDF(){
     doc.text('Business Expense Report',lm,y);y+=8;
     doc.setFontSize(10);doc.setFont('helvetica','normal');
     doc.setTextColor(100);
-    doc.text(`${periodLbl}  |  ${entName}`,lm,y);y+=5;
+    const pdfPeriod=rptPeriod==='month'?`${MO[thisMonth]} ${thisYear}`:rptYear;
+    const pdfEnt=rptEnt==='all'?'All Entities':(ENT[rptEnt]||{}).f||rptEnt;
+    doc.text(`${pdfPeriod}  |  ${pdfEnt}`,lm,y);y+=5;
     doc.text(`Generated: ${new Date().toLocaleDateString('en-MY')}`,lm,y);y+=8;
     doc.setTextColor(0);
     doc.setDrawColor(200);doc.line(lm,y,210-rm,y);y+=6;
 
     // Summary
     const bc={};
-    rptLogs.forEach(l=>{
+    filteredForPDF.forEach(l=>{
       const e=expenses.find(x=>x.id===l.expense_id)||{tax_category:'Miscellaneous',tax_deductible:100};
       const cat=e.tax_category||'Miscellaneous';
       if(!bc[cat]) bc[cat]={total:0,ded:0};
       bc[cat].total+=l.myr_amount;bc[cat].ded+=l.myr_amount*tpct(e)/100;
     });
-    const gt=rptLogs.reduce((s,l)=>s+l.myr_amount,0);
+    const gt=filteredForPDF.reduce((s,l)=>s+l.myr_amount,0);
     const gd=Object.values(bc).reduce((s,c)=>s+c.ded,0);
 
     doc.setFontSize(11);doc.setFont('helvetica','bold');
@@ -889,7 +896,7 @@ function downloadPDF(){
     doc.text('Date',lm+1,y);doc.text('Name',lm+22,y);doc.text('Entity',lm+80,y);
     doc.text('Category',lm+100,y);doc.text('Amount RM',lm+tw,y,'right');
     doc.setFont('helvetica','normal');y+=5;
-    rptLogs.forEach(l=>{
+    filteredForPDF.forEach(l=>{
       if(y>275){doc.addPage();y=20;}
       const e=expenses.find(x=>x.id===l.expense_id)||{name:'(deleted)',entity:'',tax_category:''};
       const name=e.name.length>25?e.name.substring(0,23)+'...':e.name;
