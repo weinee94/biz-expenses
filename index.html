@@ -206,7 +206,7 @@ select.fi option{background:var(--surface)}
 <div class="overlay" id="add-modal" style="display:none" onclick="if(event.target===this)closeModal('add-modal')">
 <div class="modal">
   <div class="modal-handle"></div>
-  <div class="modal-title">添加开支项目</div>
+  <div class="modal-title" id="add-modal-title">添加开支项目</div>
   <div class="fg"><label class="fl">频率</label>
     <div class="sf">
       <button class="sf-b on" id="fq-monthly" onclick="setFreq('monthly')">每月</button>
@@ -327,13 +327,13 @@ const TCATS={
 };
 
 let expenses=[],logs=[],markingId=null;
-let selFreq='monthly',selTax=100;
+let selFreq='monthly',selTax=100,editingId=null;
 let rptEnt='all',rptPeriod='month',taxYear=new Date().getFullYear();
 const today=new Date(),thisYear=today.getFullYear(),thisMonth=today.getMonth();
 
 async function api(method,table,body,params){
   const url=`${SU}/rest/v1/${table}${params?'?'+params:''}`;
-  const r=await fetch(url,{method,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},body:body?JSON.stringify(body):undefined});
+  const r=await fetch(url,{method,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':method==='PATCH'?'return=representation':''},body:body?JSON.stringify(body):undefined});
   if(!r.ok) throw new Error(await r.text());
   const t=await r.text();return t?JSON.parse(t):null;
 }
@@ -444,7 +444,7 @@ function renderExpenses(){
 function erow(e){
   const myr=toMYR(e.amount,e.currency),as=e.currency==='MYR'?fmt(myr):`${e.currency} ${e.amount} ≈ ${fmt(myr)}`;
   const f=freq(e),fi=f==='monthly'?`每月 ${e.billing_day} 日`:f==='quarterly'?'每季':f==='yearly'?`每年 ${MO[(parseInt(e.due_month)||1)-1]}`:'';
-  return `<div class="ei"><div class="ei-top"><div class="ei-name">${e.name}</div><div class="ei-amt">${as}</div></div><div class="ei-meta"><span class="pill ${tpillCls(tpct(e))}">${tpillLbl(tpct(e))}</span><span class="pill p-cat">${e.tax_category||'—'}</span>${fi?`<span class="pill p-freq">${fi}</span>`:''}</div>${e.note?`<div class="ei-note">${e.note}</div>`:''}<div class="ei-acts"><button class="btn-sm" onclick="openMark('${e.id}')">记账</button><button class="btn-sm del" onclick="delExp('${e.id}')">删除</button></div></div>`;
+  return `<div class="ei"><div class="ei-top"><div class="ei-name">${e.name}</div><div class="ei-amt">${as}</div></div><div class="ei-meta"><span class="pill ${tpillCls(tpct(e))}">${tpillLbl(tpct(e))}</span><span class="pill p-cat">${e.tax_category||'—'}</span>${fi?`<span class="pill p-freq">${fi}</span>`:''}</div>${e.note?`<div class="ei-note">${e.note}</div>`:''}<div class="ei-acts"><button class="btn-sm" onclick="openMark('${e.id}')">记账</button><button class="btn-sm" onclick="openEdit('${e.id}')">编辑</button><button class="btn-sm del" onclick="delExp('${e.id}')">删除</button></div></div>`;
 }
 
 // Log
@@ -567,10 +567,32 @@ async function chgYear(d){taxYear+=d;await renderTax();}
 
 // Modals
 function openAdd(){
+  editingId=null;
+  document.getElementById('add-modal-title').textContent='添加开支项目';
   ['f-name','f-amount','f-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-day').value='';
   document.getElementById('f-date').value=today.toISOString().split('T')[0];
+  document.getElementById('f-entity').value='wynne';
+  document.getElementById('f-taxcat').value='Software & Subscriptions';
   setFreq('monthly');setTax(100);openModal('add-modal');
+}
+function openEdit(id){
+  editingId=id;
+  const e=expenses.find(x=>x.id===id);
+  document.getElementById('add-modal-title').textContent='编辑开支项目';
+  document.getElementById('f-name').value=e.name;
+  document.getElementById('f-entity').value=ekey(e.entity);
+  document.getElementById('f-taxcat').value=e.tax_category||'Miscellaneous';
+  document.getElementById('f-amount').value=e.amount;
+  document.getElementById('f-currency').value=e.currency||'MYR';
+  document.getElementById('f-note').value=e.note||'';
+  const f=freq(e);
+  setFreq(f);setTax(tpct(e));
+  if(f==='monthly') document.getElementById('f-day').value=e.billing_day||1;
+  if(f==='quarterly') document.getElementById('f-qmonth').value=e.due_month||1;
+  if(f==='yearly') document.getElementById('f-duemonth').value=e.due_month||1;
+  if(f==='onetime') document.getElementById('f-date').value=today.toISOString().split('T')[0];
+  openModal('add-modal');
 }
 function setFreq(f){
   selFreq=f;
@@ -622,9 +644,18 @@ async function saveExpense(){
               f==='quarterly'?(parseInt(document.getElementById('f-qmonth').value)||1):null
   };
   try{
-    const res=await api('POST','expenses',body);
-    expenses.push(res[0]);expenses.sort((a,b)=>a.billing_day-b.billing_day);
-    closeModal('add-modal');renderAll();showToast('已添加：'+name);
+    if(editingId){
+      await api('PATCH','expenses',body,'id=eq.'+editingId);
+      const idx=expenses.findIndex(x=>x.id===editingId);
+      if(idx>=0) expenses[idx]={...expenses[idx],...body};
+      expenses.sort((a,b)=>a.billing_day-b.billing_day);
+      closeModal('add-modal');renderAll();showToast('已更新：'+name);
+    } else {
+      const res=await api('POST','expenses',body);
+      expenses.push(res[0]);expenses.sort((a,b)=>a.billing_day-b.billing_day);
+      closeModal('add-modal');renderAll();showToast('已添加：'+name);
+    }
+    editingId=null;
   }catch(e){showToast('保存失败：'+e.message);}
 }
 async function saveMark(){
