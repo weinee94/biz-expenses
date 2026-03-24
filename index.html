@@ -216,7 +216,6 @@ select.fi option{background:var(--surface)}
       <button class="sf-b" id="fq-quarterly" onclick="setFreq('quarterly')">每季</button>
       <button class="sf-b" id="fq-yearly" onclick="setFreq('yearly')">每年</button>
       <button class="sf-b" id="fq-triennial" onclick="setFreq('triennial')">每三年</button>
-      <button class="sf-b" id="fq-onetime" onclick="setFreq('onetime')">一次性</button>
     </div>
   </div>
   <div class="fg"><label class="fl">开支名称</label><input class="fi" id="f-name" placeholder="例：审计费"></div>
@@ -279,7 +278,7 @@ select.fi option{background:var(--surface)}
       <option value="10">十月</option><option value="11">十一月</option><option value="12">十二月</option>
     </select>
   </div>
-  <div class="fg" id="fd-date" style="display:none"><label class="fl">预计发生日期</label><input class="fi" id="f-date" type="date"></div>
+
   <div class="fg"><label class="fl">备注（可选）</label><input class="fi" id="f-note" placeholder=""></div>
   <div class="m-acts">
     <button class="btn-c" onclick="closeModal('add-modal')">取消</button>
@@ -381,11 +380,7 @@ function freq(e){return e.frequency||(e.expense_type==='onetime'?'onetime':'mont
 function tpct(e){return typeof e.tax_deductible==='number'?e.tax_deductible:100;}
 function marked(id){
   const m=String(thisMonth+1).padStart(2,'0');
-  const e=expenses.find(x=>x.id===id);
-  // Onetime expenses: marked if ANY log exists (regardless of month)
-  if(e&&freq(e)==='onetime') return logs.some(l=>l.expense_id===id);
-  // Recurring: marked if logged this month
-  return logs.some(l=>l.expense_id===id&&l.log_date&&l.log_date.startsWith(`${thisYear}-${m}`));
+  return logs.filter(l=>l.log_type!=='onetime').some(l=>l.expense_id===id&&l.log_date&&l.log_date.startsWith(`${thisYear}-${m}`));
 }
 function moEquiv(e){const f=freq(e),m=toMYR(e.amount,e.currency);return f==='monthly'?m:f==='quarterly'?m/3:f==='yearly'?m/12:f==='triennial'?m/36:0;}
 function dueThisMo(e){
@@ -415,10 +410,15 @@ function renderReminders(){
   const mo=expenses.filter(e=>freq(e)==='monthly');
   const qr=expenses.filter(e=>freq(e)==='quarterly'&&dueThisMo(e));
   const yr=expenses.filter(e=>freq(e)==='yearly'&&dueThisMo(e));
-  const oo=expenses.filter(e=>freq(e)==='onetime'&&!marked(e.id));
-  const up=expenses.filter(e=>{if(freq(e)!=='yearly')return false;const d=(parseInt(e.due_month)-1-thisMonth+12)%12;return d>0&&d<=2;});
-  if(!mo.length&&!qr.length&&!yr.length&&!oo.length&&!up.length){
-    document.getElementById('tab-reminders').innerHTML='<div class="empty">暂无开支项目<br>前往「开支」页添加</div>';return;
+  const up=expenses.filter(e=>{
+    const f=freq(e);
+    if(f!=='yearly'&&f!=='triennial') return false;
+    const dm=parseInt(e.due_month);
+    const diff=(dm-1-thisMonth+12)%12;
+    return diff>0&&diff<=2;
+  });
+  if(!mo.length&&!qr.length&&!yr.length&&!up.length){
+    document.getElementById('tab-reminders').innerHTML='<div class="empty">暂无固定开支<br>前往「开支」页添加</div>';return;
   }
   let h='';
   const sec=(title,arr,fn)=>{if(!arr.length)return;h+=`<div class="slabel">${title}</div><div class="card">`;arr.forEach(e=>h+=fn(e));h+='</div>';};
@@ -431,7 +431,6 @@ function renderReminders(){
   sec('本季到期',qr,e=>rrow(e,marked(e.id)?'b-done':'b-soon',marked(e.id)?'✓':'季',marked(e.id)));
   sec('本月年度到期',yr,e=>rrow(e,marked(e.id)?'b-done':'b-soon',marked(e.id)?'✓':'年',marked(e.id)));
   if(up.length){h+='<div class="slabel">即将到期（年度）</div><div class="card">';up.forEach(e=>{const d=(parseInt(e.due_month)-1-thisMonth+12)%12;h+=rrow(e,'b-up',d+'月',false,true);});h+='</div>';}
-  sec('一次性（待记账）',oo,e=>rrow(e,'b-one','1×',false));
   document.getElementById('tab-reminders').innerHTML=h;
 }
 function rrow(e,cls,lbl,mk,prev=false){
@@ -473,21 +472,31 @@ function erow(e){
 }
 
 // Log
+function getLogName(l){
+  if(l.log_type==='onetime') return l.item_name||'(一次性)';
+  const e=expenses.find(x=>x.id===l.expense_id);
+  return e?e.name:'(已删除)';
+}
+function getLogEntity(l){
+  if(l.log_type==='onetime') return l.item_entity||'';
+  const e=expenses.find(x=>x.id===l.expense_id);
+  return e?e.entity:'';
+}
+function getLogCat(l){
+  if(l.log_type==='onetime') return l.item_tax_category||'';
+  const e=expenses.find(x=>x.id===l.expense_id);
+  return e?e.tax_category:'';
+}
+
 function renderLog(){
-  // Entity filter UI
   let h=`<div style="display:flex;background:var(--surface2);border-radius:20px;padding:3px;gap:2px;margin-bottom:16px">
     <button class="seg-b ${logEnt==='all'?'on':''}" onclick="setLE('all')">全部</button>
     <button class="seg-b ${logEnt==='wynne'?'on':''}" onclick="setLE('wynne')">WYNNE</button>
     <button class="seg-b ${logEnt==='thf'?'on':''}" onclick="setLE('thf')">THF</button>
     <button class="seg-b ${logEnt==='twn'?'on':''}" onclick="setLE('twn')">TWN</button>
   </div>`;
-  // Filter logs by entity
-  const filtered=logEnt==='all'?logs:logs.filter(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id);
-    return e&&ekey(e.entity)===logEnt;
-  });
+  const filtered=logEnt==='all'?logs:logs.filter(l=>ekey(getLogEntity(l))===logEnt);
   if(!filtered.length){document.getElementById('tab-log').innerHTML=h+'<div class="empty">暂无记账记录</div>';return;}
-  // Group by year-month
   const groups={};
   filtered.forEach(l=>{
     const key=l.log_date?l.log_date.substring(0,7):'unknown';
@@ -500,8 +509,18 @@ function renderLog(){
     const monthTotal=groups[ym].reduce((s,l)=>s+l.myr_amount,0);
     h+=`<div class="slabel">${label} · ${fmt(monthTotal)}</div><div class="card">`;
     groups[ym].forEach(l=>{
-      const e=expenses.find(x=>x.id===l.expense_id)||{name:'(已删除)',entity:''};
-      h+=`<div class="li"><div style="flex:1;min-width:0"><div class="li-name">${e.name}</div><div class="li-meta"><span class="pill p-ent">${elabel(e.entity)}</span>${l.note?' · '+l.note:''}</div><button class="btn-sm del" style="margin-top:8px" onclick="delLog('${l.id}')">删除</button></div><div style="text-align:right;flex-shrink:0;margin-left:12px"><div class="li-amt">${fmt(l.myr_amount)}</div><div class="li-date">${l.log_date}${l.exchange_rate?' · '+l.exchange_rate:''}</div></div></div>`;
+      const name=getLogName(l);
+      const ent=getLogEntity(l);
+      const isOne=l.log_type==='onetime';
+      const catShort=(getLogCat(l)||'').split(' ')[0]||'';
+      h+=`<div class="li"><div style="flex:1;min-width:0">
+        <div class="li-name">${name}${isOne?'<span class="pill p-t50" style="margin-left:6px;font-size:10px">单据</span>':''}</div>
+        <div class="li-meta"><span class="pill p-ent">${elabel(ent)}</span>${catShort?`<span class="pill p-cat" style="margin-left:4px">${catShort}</span>`:''}</div>
+        <button class="btn-sm del" style="margin-top:8px" onclick="delLog('${l.id}')">删除</button>
+      </div><div style="text-align:right;flex-shrink:0;margin-left:12px">
+        <div class="li-amt">${fmt(l.myr_amount)}</div>
+        <div class="li-date">${l.log_date}</div>
+      </div></div>`;
     });
     h+='</div>';
   });
@@ -579,15 +598,15 @@ async function renderReport(){
   if(!fl.length){h+='<div class="empty">'+periodLbl+'暂无记账记录</div>';document.getElementById('tab-report').innerHTML=h;return;}
   const bc={};
   fl.forEach(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id)||{tax_category:'Miscellaneous',tax_deductible:100};
-    const c=e.tax_category||'Miscellaneous';
-    if(!bc[c]) bc[c]={total:0,ded:0};
-    bc[c].total+=l.myr_amount;
-    bc[c].ded+=l.myr_amount*(tpct(e)/100);
+    const cat=getLogCat(l)||'Miscellaneous';
+    const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
+    if(!bc[cat]) bc[cat]={total:0,ded:0};
+    bc[cat].total+=l.myr_amount;
+    bc[cat].ded+=l.myr_amount*(pct/100);
   });
   const grand=fl.reduce((s,l)=>s+l.myr_amount,0);
   const grandDed=Object.values(bc).reduce((s,c)=>s+c.ded,0);
-  const maxV=Math.max(...Object.values(bc).map(c=>c.total));
+  const maxV=Math.max(...Object.values(bc).map(c=>c.total),1);
   const entName=rptEnt==='all'?'全部实体':(ENT[rptEnt]||{}).f||rptEnt;
   h+=`<div class="rpt-hero"><div class="rpt-hero-label">${periodLbl} · ${entName}</div><div class="rpt-hero-amt">${fmt(grand)}</div><div class="rpt-hero-sub">可抵税金额 ${fmt(grandDed)}</div></div>`;
   h+='<div class="slabel">按类别</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">';
@@ -617,11 +636,11 @@ async function renderTax(){
   taxLogs2=await loadYear(taxYear);
   const bc={};
   taxLogs2.forEach(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id)||{tax_category:'Miscellaneous',tax_deductible:100};
-    const c=e.tax_category||'Miscellaneous';
-    if(!bc[c]) bc[c]={total:0,ded:0};
-    bc[c].total+=l.myr_amount;
-    bc[c].ded+=l.myr_amount*(tpct(e)/100);
+    const cat=getLogCat(l)||'Miscellaneous';
+    const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
+    if(!bc[cat]) bc[cat]={total:0,ded:0};
+    bc[cat].total+=l.myr_amount;
+    bc[cat].ded+=l.myr_amount*(pct/100);
   });
   const grand=taxLogs2.reduce((s,l)=>s+l.myr_amount,0);
   const grandDed=Object.values(bc).reduce((s,c)=>s+c.ded,0);
@@ -671,14 +690,13 @@ function openEdit(id){
 }
 function setFreq(f){
   selFreq=f;
-  ['monthly','quarterly','yearly','triennial','onetime'].forEach(x=>{
+  ['monthly','quarterly','yearly','triennial'].forEach(x=>{
     const el=document.getElementById('fq-'+x);
-    if(el) el.className='sf-b'+(x===f?(f==='onetime'?' on-b':' on'):'');
+    if(el) el.className='sf-b'+(x===f?' on':'');
   });
   document.getElementById('fd-day').style.display=f==='monthly'?'':'none';
   document.getElementById('fd-qm').style.display=f==='quarterly'?'':'none';
-  document.getElementById('fd-dm').style.display=f==='yearly'?'':'none';
-  document.getElementById('fd-date').style.display=f==='onetime'?'':'none';
+  document.getElementById('fd-dm').style.display=(f==='yearly'||f==='triennial')?'':'none';
 }
 function setTax(p){
   selTax=p;
@@ -714,7 +732,7 @@ async function saveExpense(){
     currency:document.getElementById('f-currency').value,
     billing_day:f==='monthly'?(parseInt(document.getElementById('f-day').value)||1):1,
     note:document.getElementById('f-note').value.trim(),
-    expense_type:f==='onetime'?'onetime':'recurring',frequency:f,
+    expense_type:'recurring',frequency:f,
     due_month:(f==='yearly')?parseInt(document.getElementById('f-duemonth').value):
               f==='triennial'?(today.getMonth()+1):
               f==='quarterly'?(parseInt(document.getElementById('f-qmonth').value)||1):null
@@ -769,15 +787,15 @@ function getRptMeta(){
 function buildRows(withHeader=true){
   const rows=withHeader?[['日期','名称','实体','税务类别 (LHDN)','可抵税%','金额 RM','汇率','可抵税金额 RM','备注']]:[];
   let gt=0,gd=0;
-  const logsToUse=rptEnt==='all'?rptLogs:rptLogs.filter(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id);
-    return e&&ekey(e.entity)===rptEnt;
-  });
+  const logsToUse=rptEnt==='all'?rptLogs:rptLogs.filter(l=>ekey(getLogEntity(l))===rptEnt);
   logsToUse.forEach(l=>{
-    const e=expenses.find(x=>x.id===l.expense_id)||{name:'(已删除)',entity:'',tax_category:'Miscellaneous',tax_deductible:100};
-    const pct=tpct(e),ded=l.myr_amount*pct/100;
+    const name=getLogName(l);
+    const ent=getLogEntity(l);
+    const cat=getLogCat(l)||'Miscellaneous';
+    const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
+    const ded=l.myr_amount*pct/100;
     gt+=l.myr_amount;gd+=ded;
-    rows.push([l.log_date,e.name,(ENT[ekey(e.entity)]||{}).f||e.entity,e.tax_category||'',pct+'%',+l.myr_amount.toFixed(2),l.exchange_rate||'',+ded.toFixed(2),l.note||'']);
+    rows.push([l.log_date,name,(ENT[ekey(ent)]||{}).f||ent,cat,pct+'%',+l.myr_amount.toFixed(2),l.exchange_rate||'',+ded.toFixed(2),l.note||'']);
   });
   rows.push(['','','','','合计',+gt.toFixed(2),'',+gd.toFixed(2),'']);
   return rows;

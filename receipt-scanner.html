@@ -253,31 +253,7 @@ async function supaPost(table,body){
   return await res.json();
 }
 
-// First check if a matching expense exists, or create one-time expense
-async function getOrCreateExpense(data){
-  // Search for existing expense with same name and entity
-  const res=await fetch(`${SUPA_URL}/rest/v1/expenses?name=eq.${encodeURIComponent(data.name)}&entity=eq.${data.entity}&select=id`,{
-    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-  });
-  const existing=await res.json();
-  if(existing&&existing.length>0) return existing[0].id;
-
-  // Create new one-time expense entry
-  const created=await supaPost('expenses',{
-    name:data.name,
-    entity:data.entity,
-    category:data.tax_category,
-    tax_category:data.tax_category,
-    tax_deductible:data.tax_deductible,
-    amount:data.myr_amount,
-    currency:'MYR',
-    billing_day:1,
-    frequency:'onetime',
-    expense_type:'onetime',
-    note:data.note||''
-  });
-  return created[0].id;
-}
+// Direct log write - no expense record needed for one-time receipts
 
 // Parse JSON
 function parseJSON(){
@@ -352,16 +328,18 @@ async function confirmRecord(){
   const taxPct=taxPctRaw!==''?parseInt(taxPctRaw):(TAX_PCT[taxCat]!==undefined?TAX_PCT[taxCat]:100);
 
   try{
-    // Get or create expense record
-    const expId=await getOrCreateExpense({name,entity,tax_category:taxCat,tax_deductible:taxPct,myr_amount:amount,note});
-
-    // Create log entry
+    // Write directly to expense_logs with onetime fields - no expense record created
     await supaPost('expense_logs',{
-      expense_id:expId,
+      expense_id:null,
       log_date:date,
       myr_amount:amount,
       exchange_rate:null,
-      note:note
+      note:note,
+      log_type:'onetime',
+      item_name:name,
+      item_entity:entity,
+      item_tax_category:taxCat,
+      item_tax_deductible:taxPct
     });
 
     document.getElementById('success-sub').textContent=`${name} · ${FMT(amount)} · ${date}`;
