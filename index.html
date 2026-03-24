@@ -258,6 +258,7 @@ select.fi option{background:var(--surface)}
   <div class="fg"><label class="fl">可抵税比例</label>
     <div class="sf">
       <button class="sf-b on" id="tx-100" onclick="setTax(100)">100%</button>
+      <button class="sf-b" id="tx-67" onclick="setTax(67)">67%</button>
       <button class="sf-b" id="tx-50" onclick="setTax(50)">50%</button>
       <button class="sf-b" id="tx-0" onclick="setTax(0)">不可抵税</button>
     </div>
@@ -344,7 +345,7 @@ const TCATS={
 
 let expenses=[],logs=[],markingId=null;
 let selFreq='monthly',selTax=100,editingId=null;
-let rptEnt='all',rptPeriod='month',rptYear='2026',taxYear=new Date().getFullYear();
+let rptEnt='all',rptPeriod='month',rptYear='2026',taxYear=new Date().getFullYear(),logEnt='all';
 const today=new Date(),thisYear=today.getFullYear(),thisMonth=today.getMonth();
 
 async function api(method,table,body,params){
@@ -473,15 +474,26 @@ function erow(e){
 
 // Log
 function renderLog(){
-  if(!logs.length){document.getElementById('tab-log').innerHTML='<div class="empty">暂无记账记录</div>';return;}
+  // Entity filter UI
+  let h=`<div style="display:flex;background:var(--surface2);border-radius:20px;padding:3px;gap:2px;margin-bottom:16px">
+    <button class="seg-b ${logEnt==='all'?'on':''}" onclick="setLE('all')">全部</button>
+    <button class="seg-b ${logEnt==='wynne'?'on':''}" onclick="setLE('wynne')">WYNNE</button>
+    <button class="seg-b ${logEnt==='thf'?'on':''}" onclick="setLE('thf')">THF</button>
+    <button class="seg-b ${logEnt==='twn'?'on':''}" onclick="setLE('twn')">TWN</button>
+  </div>`;
+  // Filter logs by entity
+  const filtered=logEnt==='all'?logs:logs.filter(l=>{
+    const e=expenses.find(x=>x.id===l.expense_id);
+    return e&&ekey(e.entity)===logEnt;
+  });
+  if(!filtered.length){document.getElementById('tab-log').innerHTML=h+'<div class="empty">暂无记账记录</div>';return;}
   // Group by year-month
   const groups={};
-  logs.forEach(l=>{
+  filtered.forEach(l=>{
     const key=l.log_date?l.log_date.substring(0,7):'unknown';
     if(!groups[key]) groups[key]=[];
     groups[key].push(l);
   });
-  let h='';
   Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(ym=>{
     const [y,m]=ym.split('-');
     const label=MO[parseInt(m)-1]+' '+y;
@@ -495,6 +507,7 @@ function renderLog(){
   });
   document.getElementById('tab-log').innerHTML=h;
 }
+function setLE(e){logEnt=e;renderLog();}
 
 // Summary
 function renderSummary(){
@@ -669,7 +682,7 @@ function setFreq(f){
 }
 function setTax(p){
   selTax=p;
-  [100,50,0].forEach(v=>{document.getElementById('tx-'+v).className='sf-b'+(v===p?' on':'');});
+  [100,67,50,0].forEach(v=>{document.getElementById('tx-'+v).className='sf-b'+(v===p?' on':'');});
 }
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('f-taxcat').addEventListener('change',function(){
