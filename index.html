@@ -744,11 +744,6 @@ async function saveMark(){
   try{
     const res=await api('POST','expense_logs',body);
     logs.unshift(res[0]);
-    const exp=expenses.find(e=>e.id===markingId);
-    if(exp&&freq(exp)==='onetime'){
-      await api('DELETE','expenses',null,'id=eq.'+markingId);
-      expenses=expenses.filter(e=>e.id!==markingId);
-    }
     closeModal('mark-modal');
     renderAll();
     showToast('记账成功');
