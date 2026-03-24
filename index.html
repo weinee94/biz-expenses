@@ -352,11 +352,12 @@ function renderLog() {
     const exp = expenses.find(e => e.id === l.expense_id) || { name: '(已删除)', entity: '', category: '' };
     const isOne = expType(exp) === 'onetime';
     html += `<div class="log-item">
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="log-name">${exp.name}${isOne ? '<span class="one-pill" style="margin-left:6px">一次性</span>' : ''}</div>
         <div class="log-meta"><span class="entity-pill">${entityShort(exp.entity)}</span>${l.note ? ' · ' + l.note : ''}</div>
+        <button class="btn-sm danger" style="margin-top:6px" onclick="deleteLog('${l.id}')">删除记录</button>
       </div>
-      <div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px">
         <div class="log-amount">${fmtMYR(l.myr_amount)}</div>
         <div class="log-date">${l.log_date}${l.exchange_rate ? ' · 汇率 ' + l.exchange_rate : ''}</div>
       </div>
@@ -471,6 +472,15 @@ async function deleteExpense(id) {
     expenses = expenses.filter(e => e.id !== id);
     renderAll(); showToast('已删除');
   } catch(e) { showToast('删除失败'); }
+}
+
+async function deleteLog(id) {
+  if (!confirm("确认删除这条记账记录？")) return;
+  try {
+    await api("DELETE", "expense_logs", null, `id=eq.${id}`);
+    logs = logs.filter(l => l.id !== id);
+    renderAll(); showToast("记录已删除");
+  } catch(e) { showToast("删除失败"); }
 }
 
 function showToast(msg) {
