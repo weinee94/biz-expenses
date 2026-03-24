@@ -4,120 +4,140 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>商业开支记录</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #222222;
-    --border: #2a2a2a;
-    --border2: #333333;
-    --text: #e8e8e8;
-    --text2: #888888;
-    --text3: #555555;
-    --accent: #c8f04a;
-    --accent-dim: #8aaa2a;
-    --danger: #ff5a5a;
-    --warn: #f0a500;
-    --success: #4adf8a;
-    --mono: 'DM Mono', monospace;
-    --sans: 'Noto Sans SC', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+:root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--border:#2a2a2a;--border2:#333;--text:#e8e8e8;--text2:#888;--text3:#555;--accent:#c8f04a;--accent-dim:#8aaa2a;--danger:#ff5a5a;--warn:#f0a500;--success:#4adf8a;--blue:#6ab0ff;--mono:'DM Mono',monospace;--sans:'Noto Sans SC',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
+.app{max-width:480px;margin:0 auto;padding:0 0 80px}
 
-  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
-  .header { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
-  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .app-title { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
-  .month-label { font-size: 22px; font-weight: 300; }
-  .header-stats { text-align: right; }
-  .header-amount { font-family: var(--mono); font-size: 20px; color: var(--accent); }
-  .header-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+/* Header */
+.header{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start}
+.app-title{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.month-label{font-size:20px;font-weight:300}
+.header-right{text-align:right}
+.header-amount{font-family:var(--mono);font-size:18px;color:var(--accent)}
+.header-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.progress-bar{height:2px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
 
-  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
-  .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 12px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: var(--mono); letter-spacing: 0.05em; background: none; border-top: none; border-left: none; border-right: none; }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:11px 2px;text-align:center;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;font-family:var(--mono);letter-spacing:.04em;background:none;border-top:none;border-left:none;border-right:none;transition:all .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
-  .content { padding: 16px 20px; }
-  .section-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin: 20px 0 10px; }
-  .section-label:first-child { margin-top: 0; }
+.content{padding:14px 20px}
+.section-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin:18px 0 8px}
+.section-label:first-child{margin-top:0}
 
-  .reminder-card { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
-  .reminder-card:last-child { border-bottom: none; }
-  .day-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; flex-shrink: 0; }
-  .day-done { background: #1a2a1a; color: var(--success); }
-  .day-overdue { background: #2a1a1a; color: var(--danger); }
-  .day-soon { background: #2a2010; color: var(--warn); }
-  .day-normal { background: var(--surface); color: var(--text2); }
-  .day-onetime { background: #1a1a2a; color: #8888ff; }
-  .reminder-info { flex: 1; min-width: 0; }
-  .reminder-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .reminder-meta { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
-  .reminder-right { text-align: right; flex-shrink: 0; }
-  .reminder-amount { font-family: var(--mono); font-size: 13px; }
-  .reminder-myr { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
-  .btn-mark { margin-top: 6px; font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 4px; background: none; color: var(--text2); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; display: block; margin-left: auto; }
-  .btn-mark:hover { border-color: var(--accent); color: var(--accent); }
-  .done-label { font-size: 10px; color: var(--success); font-family: var(--mono); margin-top: 6px; }
+/* Reminder cards */
+.reminder-card{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.reminder-card:last-child{border-bottom:none}
+.day-badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:500;flex-shrink:0;line-height:1.2;text-align:center}
+.day-done{background:#1a2a1a;color:var(--success)}
+.day-overdue{background:#2a1a1a;color:var(--danger)}
+.day-soon{background:#2a2010;color:var(--warn)}
+.day-normal{background:var(--surface);color:var(--text2)}
+.day-onetime{background:#1a1a2a;color:var(--blue)}
+.day-upcoming{background:#1a2020;color:#4af0c0}
+.reminder-info{flex:1;min-width:0}
+.reminder-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reminder-meta{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono)}
+.reminder-right{text-align:right;flex-shrink:0}
+.reminder-amount{font-family:var(--mono);font-size:12px}
+.reminder-myr{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.btn-mark{margin-top:5px;font-family:var(--mono);font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text2);cursor:pointer;display:block;margin-left:auto;transition:all .15s}
+.btn-mark:hover{border-color:var(--accent);color:var(--accent)}
+.done-label{font-size:10px;color:var(--success);font-family:var(--mono);margin-top:5px}
 
-  .entity-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface2); color: var(--text3); margin-right: 4px; }
-  .cat-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--surface); color: var(--text3); }
-  .one-pill { display: inline-block; font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #1a1a2a; color: #8888ff; margin-left: 4px; }
+/* Pills */
+.pill{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:3px}
+.pill-entity{background:var(--surface2);color:var(--text3);margin-right:3px}
+.pill-cat{background:var(--surface);color:var(--text3)}
+.pill-freq{background:#1a1f1a;color:#6aaa4a}
+.pill-onetime{background:#1a1a2a;color:var(--blue)}
+.pill-tax100{background:#1a2a1a;color:var(--success)}
+.pill-tax50{background:#2a2010;color:var(--warn)}
+.pill-tax0{background:#2a1a1a;color:var(--danger)}
 
-  .expense-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
-  .expense-item:last-child { border-bottom: none; }
-  .expense-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .expense-name { font-size: 13px; font-weight: 500; flex: 1; }
-  .expense-amount { font-family: var(--mono); font-size: 13px; color: var(--accent); flex-shrink: 0; }
-  .expense-actions { display: flex; gap: 8px; margin-top: 10px; }
-  .btn-sm { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 4px; background: none; color: var(--text3); cursor: pointer; letter-spacing: 0.05em; }
-  .btn-sm:hover { color: var(--text); border-color: var(--text2); }
-  .btn-sm.danger:hover { color: var(--danger); border-color: var(--danger); }
+/* Expense list */
+.expense-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.expense-item:last-child{border-bottom:none}
+.expense-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.expense-name{font-size:13px;font-weight:500;flex:1}
+.expense-amount{font-family:var(--mono);font-size:12px;color:var(--accent);flex-shrink:0}
+.expense-bottom{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.expense-actions{display:flex;gap:6px;margin-top:8px}
+.btn-sm{font-family:var(--mono);font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text3);cursor:pointer}
+.btn-sm:hover{color:var(--text);border-color:var(--text2)}
+.btn-sm.danger:hover{color:var(--danger);border-color:var(--danger)}
 
-  .log-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .log-item:last-child { border-bottom: none; }
-  .log-name { font-size: 13px; font-weight: 500; }
-  .log-meta { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
-  .log-amount { font-family: var(--mono); font-size: 13px; color: var(--success); text-align: right; }
-  .log-date { font-size: 10px; color: var(--text3); font-family: var(--mono); text-align: right; margin-top: 3px; }
+/* Log */
+.log-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-name{font-size:13px;font-weight:500}
+.log-meta{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.log-amount{font-family:var(--mono);font-size:12px;color:var(--success);text-align:right}
+.log-date{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:right;margin-top:2px}
 
-  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .summary-row:last-child { border-bottom: none; }
-  .summary-label { font-size: 13px; color: var(--text2); }
-  .summary-val { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+/* Summary */
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none}
+.summary-label{font-size:13px;color:var(--text2)}
+.summary-val{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.summary-sub{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px}
 
-  .add-row { margin-top: 16px; }
-  .btn-add { width: 100%; padding: 12px; border: 1px dashed var(--border2); border-radius: 8px; background: none; color: var(--text3); font-family: var(--mono); font-size: 11px; cursor: pointer; letter-spacing: 0.1em; transition: all 0.15s; }
-  .btn-add:hover { border-color: var(--accent-dim); color: var(--accent); }
+/* Tax summary */
+.tax-card{background:var(--surface);border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border)}
+.tax-card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.tax-cat-name{font-size:12px;font-weight:500}
+.tax-cat-code{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px}
+.tax-deduct{font-family:var(--mono);font-size:11px;text-align:right}
+.tax-amount{font-family:var(--mono);font-size:14px;color:var(--accent);text-align:right;margin-top:2px}
+.tax-deductible-amount{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:right;margin-top:1px}
 
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
-  .modal { background: var(--surface); border-top: 1px solid var(--border2); border-radius: 16px 16px 0 0; padding: 24px 20px 40px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
-  .modal-title { font-family: var(--mono); font-size: 12px; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
-  .form-group { margin-bottom: 16px; }
-  .form-label { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.08em; margin-bottom: 6px; display: block; }
-  .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; }
-  .form-input:focus { border-color: var(--accent-dim); }
-  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  select.form-input option { background: var(--surface2); }
+/* Year switcher */
+.year-switcher{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.year-btn{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text2);cursor:pointer}
+.year-btn:hover{color:var(--accent);border-color:var(--accent-dim)}
+.year-label{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500;flex:1;text-align:center}
 
-  .type-toggle { display: flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
-  .type-btn { flex: 1; padding: 9px 0; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text3); cursor: pointer; background: none; border: none; letter-spacing: 0.05em; transition: all 0.15s; }
-  .type-btn.active-rec { background: var(--surface2); color: var(--accent); }
-  .type-btn.active-one { background: var(--surface2); color: #8888ff; }
+/* Add */
+.btn-add{width:100%;padding:11px;border:1px dashed var(--border2);border-radius:8px;background:none;color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;letter-spacing:.08em;transition:all .15s;margin-top:14px}
+.btn-add:hover{border-color:var(--accent-dim);color:var(--accent)}
 
-  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
-  .btn-primary { flex: 1; padding: 12px; background: var(--accent); color: #0f0f0f; border: none; border-radius: 6px; font-family: var(--mono); font-size: 12px; font-weight: 500; cursor: pointer; letter-spacing: 0.08em; }
-  .btn-primary:hover { background: #d4f55a; }
-  .btn-cancel { padding: 12px 20px; background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--text3); font-family: var(--mono); font-size: 12px; cursor: pointer; }
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;justify-content:center;z-index:100}
+.modal{background:var(--surface);border-top:1px solid var(--border2);border-radius:16px 16px 0 0;padding:22px 20px 40px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:.07em;margin-bottom:5px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 11px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none}
+.form-input:focus{border-color:var(--accent-dim)}
+select.form-input option{background:var(--surface2)}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-  .empty-state { text-align: center; padding: 40px 0; color: var(--text3); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; line-height: 2; }
-  .loading { text-align: center; padding: 40px 0; color: var(--text3); font-family: var(--mono); font-size: 11px; }
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 20px; font-family: var(--mono); font-size: 11px; color: var(--text2); z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
-  .toast.show { opacity: 1; }
+/* Toggle */
+.toggle-group{display:flex;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.toggle-btn{flex:1;padding:8px 0;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text3);cursor:pointer;background:none;border:none;letter-spacing:.04em;transition:all .15s}
+.toggle-btn.on{background:var(--surface2);color:var(--accent)}
+.toggle-btn.on-blue{background:var(--surface2);color:var(--blue)}
+
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.btn-primary{flex:1;padding:11px;background:var(--accent);color:#0f0f0f;border:none;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;letter-spacing:.07em}
+.btn-primary:hover{background:#d4f55a}
+.btn-cancel{padding:11px 18px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:var(--mono);font-size:12px;cursor:pointer}
+
+.empty-state{text-align:center;padding:36px 0;color:var(--text3);font-family:var(--mono);font-size:11px;line-height:2}
+.loading{text-align:center;padding:36px 0;color:var(--text3);font-family:var(--mono);font-size:11px}
+.toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 18px;font-family:var(--mono);font-size:11px;color:var(--text2);z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+.divider-label{display:flex;align-items:center;gap:8px;margin:16px 0 10px}
+.divider-label span{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
 </style>
 </head>
 <body>
@@ -128,7 +148,7 @@
         <div class="app-title">Business Expenses</div>
         <div class="month-label" id="month-label">—</div>
       </div>
-      <div class="header-stats">
+      <div class="header-right">
         <div class="header-amount" id="total-myr">RM —</div>
         <div class="header-sub" id="progress-text">— / — 已记账</div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -141,6 +161,7 @@
     <button class="tab" onclick="switchTab('expenses')">开支</button>
     <button class="tab" onclick="switchTab('log')">记录</button>
     <button class="tab" onclick="switchTab('summary')">总结</button>
+    <button class="tab" onclick="switchTab('tax')">税务</button>
   </div>
 
   <div class="content">
@@ -148,21 +169,27 @@
     <div id="tab-expenses" style="display:none"></div>
     <div id="tab-log" style="display:none"></div>
     <div id="tab-summary" style="display:none"></div>
+    <div id="tab-tax" style="display:none"></div>
   </div>
 </div>
 
-<!-- Add Expense Modal -->
+<!-- Add/Edit Expense Modal -->
 <div class="modal-overlay" id="add-modal" style="display:none" onclick="if(event.target===this)closeModal('add-modal')">
 <div class="modal">
-  <div class="modal-title">添加开支项目</div>
+  <div class="modal-title" id="add-modal-title">添加开支项目</div>
+
   <div class="form-group">
-    <label class="form-label">开支类型</label>
-    <div class="type-toggle">
-      <button class="type-btn active-rec" id="btn-rec" onclick="setType('recurring')">每月固定</button>
-      <button class="type-btn" id="btn-one" onclick="setType('onetime')">一次性</button>
+    <label class="form-label">频率</label>
+    <div class="toggle-group" id="freq-toggle">
+      <button class="toggle-btn on" id="freq-monthly" onclick="setFreq('monthly')">每月</button>
+      <button class="toggle-btn" id="freq-quarterly" onclick="setFreq('quarterly')">每季</button>
+      <button class="toggle-btn" id="freq-yearly" onclick="setFreq('yearly')">每年</button>
+      <button class="toggle-btn" id="freq-onetime" onclick="setFreq('onetime')">一次性</button>
     </div>
   </div>
-  <div class="form-group"><label class="form-label">开支名称</label><input class="form-input" id="f-name" placeholder="例：Google Workspace"></div>
+
+  <div class="form-group"><label class="form-label">开支名称</label><input class="form-input" id="f-name" placeholder="例：审计费"></div>
+
   <div class="form-group"><label class="form-label">所属实体</label>
     <select class="form-input" id="f-entity">
       <option value="wynne">WYNNE CONSULTANCY GROUP PLT</option>
@@ -170,22 +197,59 @@
       <option value="twn">TAN WEI NEE</option>
     </select>
   </div>
-  <div class="form-group"><label class="form-label">类别</label>
-    <select class="form-input" id="f-cat">
-      <option>软件订阅</option><option>专业服务</option><option>办公室租金</option>
-      <option>薪资</option><option>保险</option><option>银行手续费</option>
-      <option>营销广告</option><option>交通运输</option><option>公用事业</option><option>其他</option>
+
+  <div class="form-group"><label class="form-label">税务类别 (LHDN)</label>
+    <select class="form-input" id="f-taxcat">
+      <option value="Salaries & EPF/SOCSO/EIS">薪资与雇主供款 — Salaries & EPF/SOCSO/EIS</option>
+      <option value="Professional Fees">专业服务费 — Professional Fees</option>
+      <option value="Rental">租金 — Rental</option>
+      <option value="Software & Subscriptions">软件订阅 — Software & Subscriptions</option>
+      <option value="Telephone & Internet">电话与网络 — Telephone & Internet</option>
+      <option value="Travelling & Transportation">差旅交通 — Travelling & Transportation</option>
+      <option value="Entertainment">招待娱乐 — Entertainment (50%)</option>
+      <option value="Advertisement & Marketing">广告营销 — Advertisement & Marketing</option>
+      <option value="Repairs & Maintenance">维修保养 — Repairs & Maintenance</option>
+      <option value="Utilities">公用事业 — Utilities</option>
+      <option value="Bank Charges">银行手续费 — Bank Charges</option>
+      <option value="Insurance">保险 — Insurance</option>
+      <option value="Govt Fees & Licences">政府规费与执照 — Govt Fees & Licences</option>
+      <option value="Training & Development">培训进修 — Training & Development</option>
+      <option value="Printing & Stationery">印刷文具 — Printing & Stationery</option>
+      <option value="Donations">捐款 — Donations</option>
+      <option value="Capital Expenditure">资本开支 — Capital Expenditure (CA)</option>
+      <option value="Miscellaneous">其他 — Miscellaneous</option>
     </select>
   </div>
+
+  <div class="form-group"><label class="form-label">可抵税比例</label>
+    <div class="toggle-group" id="tax-toggle">
+      <button class="toggle-btn on" id="tax-100" onclick="setTax(100)">100%</button>
+      <button class="toggle-btn" id="tax-50" onclick="setTax(50)">50%</button>
+      <button class="toggle-btn" id="tax-0" onclick="setTax(0)">不可抵税</button>
+    </div>
+  </div>
+
   <div class="form-row2">
     <div class="form-group"><label class="form-label">金额</label><input class="form-input" id="f-amount" type="number" placeholder="0.00"></div>
     <div class="form-group"><label class="form-label">货币</label>
-      <select class="form-input" id="f-currency"><option>MYR</option><option>USD</option><option>SGD</option></select>
+      <select class="form-input" id="f-currency"><option>MYR</option><option>USD</option><option>SGD</option><option>EUR</option></select>
     </div>
   </div>
-  <div class="form-group" id="day-field"><label class="form-label">每月扣款日</label><input class="form-input" id="f-day" type="number" min="1" max="31" placeholder="24"></div>
-  <div class="form-group" id="date-field" style="display:none"><label class="form-label">预计发生日期</label><input class="form-input" id="f-date" type="date"></div>
+
+  <div class="form-group" id="field-day"><label class="form-label">每月扣款日</label><input class="form-input" id="f-day" type="number" min="1" max="31" placeholder="1"></div>
+  <div class="form-group" id="field-quarter" style="display:none"><label class="form-label">每季首月（1=Jan, 4=Apr...）</label><input class="form-input" id="f-qmonth" type="number" min="1" max="3" placeholder="1"></div>
+  <div class="form-group" id="field-duemonth" style="display:none"><label class="form-label">到期月份</label>
+    <select class="form-input" id="f-duemonth">
+      <option value="1">一月</option><option value="2">二月</option><option value="3">三月</option>
+      <option value="4">四月</option><option value="5">五月</option><option value="6">六月</option>
+      <option value="7">七月</option><option value="8">八月</option><option value="9">九月</option>
+      <option value="10">十月</option><option value="11">十一月</option><option value="12">十二月</option>
+    </select>
+  </div>
+  <div class="form-group" id="field-date" style="display:none"><label class="form-label">预计发生日期</label><input class="form-input" id="f-date" type="date"></div>
+
   <div class="form-group"><label class="form-label">备注（可选）</label><input class="form-input" id="f-note" placeholder=""></div>
+
   <div class="modal-actions">
     <button class="btn-cancel" onclick="closeModal('add-modal')">取消</button>
     <button class="btn-primary" onclick="saveExpense()">保存</button>
@@ -211,75 +275,207 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://artigtysbyfiqgmskcsu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydGlndHlzYnlmaXFnbXNrY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjQwMDQsImV4cCI6MjA4OTkwMDAwNH0.eaAz4R-xcDJFgzqMD3CRdQ6sCAreonR0z2lv1teor0U';
-const USD_MYR = 4.45, SGD_MYR = 3.10;
-
-let expenses = [], logs = [], markingId = null, selectedType = 'recurring';
-const today = new Date();
-const thisYear = today.getFullYear(), thisMonth = today.getMonth();
+const SUPA_URL = 'https://artigtysbyfiqgmskcsu.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydGlndHlzYnlmaXFnbXNrY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjQwMDQsImV4cCI6MjA4OTkwMDAwNH0.eaAz4R-xcDJFgzqMD3CRdQ6sCAreonR0z2lv1teor0U';
+const FX = { MYR:1, USD:4.45, SGD:3.10, EUR:4.90 };
 const MONTHS = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const FREQ_LABEL = { monthly:'每月', quarterly:'每季', yearly:'每年', onetime:'一次性' };
+const TAX_CATS = {
+  'Salaries & EPF/SOCSO/EIS': { zh:'薪资与供款', pct:100 },
+  'Professional Fees':         { zh:'专业服务费', pct:100 },
+  'Rental':                    { zh:'租金', pct:100 },
+  'Software & Subscriptions':  { zh:'软件订阅', pct:100 },
+  'Telephone & Internet':      { zh:'电话与网络', pct:100 },
+  'Travelling & Transportation':{ zh:'差旅交通', pct:100 },
+  'Entertainment':             { zh:'招待娱乐', pct:50 },
+  'Advertisement & Marketing': { zh:'广告营销', pct:100 },
+  'Repairs & Maintenance':     { zh:'维修保养', pct:100 },
+  'Utilities':                 { zh:'公用事业', pct:100 },
+  'Bank Charges':              { zh:'银行手续费', pct:100 },
+  'Insurance':                 { zh:'保险', pct:100 },
+  'Govt Fees & Licences':      { zh:'政府规费', pct:100 },
+  'Training & Development':    { zh:'培训进修', pct:100 },
+  'Printing & Stationery':     { zh:'印刷文具', pct:100 },
+  'Donations':                 { zh:'捐款', pct:100 },
+  'Capital Expenditure':       { zh:'资本开支', pct:0 },
+  'Miscellaneous':             { zh:'其他', pct:100 }
+};
 
-async function api(method, table, body, params) {
-  let url = `${SUPABASE_URL}/rest/v1/${table}${params ? '?' + params : ''}`;
-  const res = await fetch(url, {
+let expenses=[], logs=[], markingId=null;
+let selFreq='monthly', selTax=100;
+let summaryYear = new Date().getFullYear();
+
+const today = new Date();
+const thisYear = today.getFullYear();
+const thisMonth = today.getMonth(); // 0-based
+const todayDay = today.getDate();
+
+// ── API ──────────────────────────────────────────────
+async function api(method, table, body, params){
+  const url = `${SUPA_URL}/rest/v1/${table}${params?'?'+params:''}`;
+  const res = await fetch(url,{
     method,
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': method === 'POST' ? 'return=representation' : '' },
-    body: body ? JSON.stringify(body) : undefined
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},
+    body:body?JSON.stringify(body):undefined
   });
-  if (!res.ok) throw new Error(await res.text());
-  const t = await res.text(); return t ? JSON.parse(t) : null;
+  if(!res.ok) throw new Error(await res.text());
+  const t=await res.text(); return t?JSON.parse(t):null;
 }
 
-async function loadData() {
-  try {
-    expenses = await api('GET', 'expenses', null, 'order=billing_day.asc') || [];
-    const m = String(thisMonth + 1).padStart(2, '0');
-    logs = await api('GET', 'expense_logs', null, `log_date=gte.${thisYear}-${m}-01&log_date=lte.${thisYear}-${m}-31&order=created_at.desc`) || [];
-  } catch(e) { showToast('加载失败'); }
+async function loadData(){
+  try{
+    expenses = await api('GET','expenses',null,'order=billing_day.asc') || [];
+    const m = String(thisMonth+1).padStart(2,'0');
+    logs = await api('GET','expense_logs',null,`log_date=gte.${thisYear}-${m}-01&log_date=lte.${thisYear}-${m}-31&order=created_at.desc`) || [];
+  }catch(e){ showToast('加载失败'); }
 }
 
-function toMYR(amount, currency) {
-  if (currency === 'USD') return amount * USD_MYR;
-  if (currency === 'SGD') return amount * SGD_MYR;
-  return amount;
-}
-function isMarked(id) { return logs.some(l => l.expense_id === id); }
-function entityShort(e) { return e === 'wynne' ? 'WYNNE' : e === 'thf' ? 'HOME FACTORY' : 'TAN WEI NEE'; }
-function fmtMYR(n) { return 'RM ' + n.toFixed(2); }
-function daysUntil(day) { return Math.round((new Date(thisYear, thisMonth, day) - today) / 86400000); }
-function expType(e) { return e.expense_type || 'recurring'; }
-
-function setType(type) {
-  selectedType = type;
-  document.getElementById('btn-rec').className = 'type-btn' + (type === 'recurring' ? ' active-rec' : '');
-  document.getElementById('btn-one').className = 'type-btn' + (type === 'onetime' ? ' active-one' : '');
-  document.getElementById('day-field').style.display = type === 'recurring' ? '' : 'none';
-  document.getElementById('date-field').style.display = type === 'onetime' ? '' : 'none';
+async function loadLogsForYear(year){
+  try{
+    return await api('GET','expense_logs',null,`log_date=gte.${year}-01-01&log_date=lte.${year}-12-31&order=log_date.asc`) || [];
+  }catch(e){ return []; }
 }
 
-function updateHeader() {
-  document.getElementById('month-label').textContent = MONTHS[thisMonth] + ' ' + thisYear;
-  const rec = expenses.filter(e => expType(e) === 'recurring');
-  const total = rec.reduce((s, e) => s + toMYR(e.amount, e.currency), 0);
-  document.getElementById('total-myr').textContent = fmtMYR(total) + '/月';
-  const done = rec.filter(e => isMarked(e.id)).length;
-  document.getElementById('progress-text').textContent = `${done} / ${rec.length} 已记账`;
-  document.getElementById('progress-fill').style.width = (rec.length ? Math.round(done / rec.length * 100) : 0) + '%';
+// ── Helpers ──────────────────────────────────────────
+function toMYR(amount, currency){ return amount * (FX[currency]||1); }
+function fmtMYR(n){ return 'RM '+n.toFixed(2); }
+function fmtCompact(n){ return n>=1000?'RM '+(n/1000).toFixed(1)+'k':'RM '+n.toFixed(0); }
+function freq(e){ return e.frequency || (e.expense_type==='onetime'?'onetime':'monthly'); }
+function taxPct(e){ return typeof e.tax_deductible==='number'?e.tax_deductible:100; }
+function entityShort(e){ return e==='wynne'?'WYNNE':e==='thf'?'HOME FACTORY':'TAN WEI NEE'; }
+function isMarkedThisMonth(id){ return logs.some(l=>l.expense_id===id); }
+function taxPillCls(pct){ return pct===100?'pill-tax100':pct===50?'pill-tax50':'pill-tax0'; }
+function taxPillLabel(pct){ return pct===100?'100%':pct===50?'50%':'不可抵'; }
+
+function daysUntilDay(day){
+  const t=new Date(thisYear,thisMonth,day);
+  return Math.round((t-today)/86400000);
 }
 
-function reminderCard(exp, cls, label, marked) {
-  const myr = toMYR(exp.amount, exp.currency);
-  const amtStr = exp.currency === 'MYR' ? fmtMYR(myr) : `${exp.currency} ${exp.amount}`;
-  const myrStr = exp.currency !== 'MYR' ? `<div class="reminder-myr">≈ ${fmtMYR(myr)}</div>` : '';
-  const action = marked
-    ? `<div class="done-label">✓ 已记账</div>`
-    : `<button class="btn-mark" onclick="openMark('${exp.id}')">记账 →</button>`;
+// Is this expense due this month?
+function isDueThisMonth(exp){
+  const f=freq(exp);
+  if(f==='monthly') return true;
+  if(f==='onetime') return true;
+  if(f==='quarterly'){
+    const qm=parseInt(exp.billing_day)||1; // reuse billing_day as quarter start month offset (1-3)
+    // quarters starting at due_month (1-based), every 3 months
+    const dm = parseInt(exp.due_month)||1;
+    // due months: dm, dm+3, dm+6, dm+9 (mod 12)
+    for(let i=0;i<4;i++){
+      let m=(dm-1+i*3)%12+1;
+      if(m===thisMonth+1) return true;
+    }
+    return false;
+  }
+  if(f==='yearly'){
+    return parseInt(exp.due_month)===thisMonth+1;
+  }
+  return false;
+}
+
+// Monthly equivalent for summary
+function monthlyEquiv(exp){
+  const f=freq(exp);
+  const myr=toMYR(exp.amount,exp.currency);
+  if(f==='monthly') return myr;
+  if(f==='quarterly') return myr/3;
+  if(f==='yearly') return myr/12;
+  return 0;
+}
+
+// ── UI: Header ────────────────────────────────────────
+function updateHeader(){
+  document.getElementById('month-label').textContent=MONTHS[thisMonth]+' '+thisYear;
+  const due=expenses.filter(e=>isDueThisMonth(e)&&freq(e)!=='onetime');
+  const total=due.reduce((s,e)=>s+toMYR(e.amount,e.currency),0);
+  document.getElementById('total-myr').textContent=fmtMYR(total);
+  const done=due.filter(e=>isMarkedThisMonth(e.id)).length;
+  const pct=due.length?Math.round(done/due.length*100):0;
+  document.getElementById('progress-text').textContent=`${done} / ${due.length} 已记账`;
+  document.getElementById('progress-fill').style.width=pct+'%';
+}
+
+// ── Tab: Reminders ────────────────────────────────────
+function renderReminders(){
+  const monthly=expenses.filter(e=>freq(e)==='monthly');
+  const quarterly=expenses.filter(e=>freq(e)==='quarterly'&&isDueThisMonth(e));
+  const yearly=expenses.filter(e=>freq(e)==='yearly'&&isDueThisMonth(e));
+  const oneoff=expenses.filter(e=>freq(e)==='onetime'&&!isMarkedThisMonth(e.id));
+  const upcomingYearly=expenses.filter(e=>{
+    if(freq(e)!=='yearly') return false;
+    const dm=parseInt(e.due_month);
+    const diff=(dm-1-thisMonth+12)%12;
+    return diff>0&&diff<=2; // due in 1-2 months
+  });
+
+  if(!monthly.length&&!quarterly.length&&!yearly.length&&!oneoff.length&&!upcomingYearly.length){
+    document.getElementById('tab-reminders').innerHTML='<div class="empty-state">暂无开支项目<br>请先在「开支」添加</div>';
+    return;
+  }
+
+  let html='';
+
+  if(monthly.length){
+    html+='<div class="section-label">每月固定</div>';
+    monthly.forEach(exp=>{
+      const marked=isMarkedThisMonth(exp.id);
+      const d=daysUntilDay(exp.billing_day);
+      let cls,label;
+      if(marked){cls='day-done';label='✓';}
+      else if(d<0){cls='day-overdue';label=Math.abs(d)+'d';}
+      else if(d<=3){cls='day-soon';label=d===0?'今':d+'d';}
+      else{cls='day-normal';label=exp.billing_day+'日';}
+      html+=reminderCard(exp,cls,label,marked);
+    });
+  }
+
+  if(quarterly.length){
+    html+='<div class="section-label" style="margin-top:20px">本季到期</div>';
+    quarterly.forEach(exp=>{
+      const marked=isMarkedThisMonth(exp.id);
+      html+=reminderCard(exp,marked?'day-done':'day-soon',marked?'✓':'季',marked);
+    });
+  }
+
+  if(yearly.length){
+    html+='<div class="section-label" style="margin-top:20px">本月年度到期</div>';
+    yearly.forEach(exp=>{
+      const marked=isMarkedThisMonth(exp.id);
+      html+=reminderCard(exp,marked?'day-done':'day-soon',marked?'✓':'年',marked);
+    });
+  }
+
+  if(upcomingYearly.length){
+    html+='<div class="section-label" style="margin-top:20px">即将到期（年度）</div>';
+    upcomingYearly.forEach(exp=>{
+      const dm=parseInt(exp.due_month);
+      const diff=(dm-1-thisMonth+12)%12;
+      html+=reminderCard(exp,'day-upcoming',diff+'月',false,true);
+    });
+  }
+
+  if(oneoff.length){
+    html+='<div class="section-label" style="margin-top:20px">一次性（待记账）</div>';
+    oneoff.forEach(exp=>{ html+=reminderCard(exp,'day-onetime','1×',false); });
+  }
+
+  document.getElementById('tab-reminders').innerHTML=html;
+}
+
+function reminderCard(exp, cls, label, marked, preview=false){
+  const myr=toMYR(exp.amount,exp.currency);
+  const amtStr=exp.currency==='MYR'?fmtMYR(myr):`${exp.currency} ${exp.amount}`;
+  const myrStr=exp.currency!=='MYR'?`<div class="reminder-myr">≈ ${fmtMYR(myr)}</div>`:'';
+  const action=preview?'':(marked
+    ?`<div class="done-label">✓ 已记账</div>`
+    :`<button class="btn-mark" onclick="openMark('${exp.id}')">记账 →</button>`);
+  const tc=exp.tax_category||'';
   return `<div class="reminder-card">
     <div class="day-badge ${cls}">${label}</div>
     <div class="reminder-info">
       <div class="reminder-name">${exp.name}</div>
-      <div class="reminder-meta"><span class="entity-pill">${entityShort(exp.entity)}</span><span class="cat-pill">${exp.category}</span></div>
+      <div class="reminder-meta"><span class="pill pill-entity">${entityShort(exp.entity)}</span><span class="pill pill-cat">${tc?tc.split(' ')[0]:'—'}</span></div>
     </div>
     <div class="reminder-right">
       <div class="reminder-amount">${amtStr}</div>${myrStr}${action}
@@ -287,219 +483,341 @@ function reminderCard(exp, cls, label, marked) {
   </div>`;
 }
 
-function renderReminders() {
-  const rec = expenses.filter(e => expType(e) === 'recurring');
-  const one = expenses.filter(e => expType(e) === 'onetime' && !isMarked(e.id));
-  if (!rec.length && !one.length) {
-    document.getElementById('tab-reminders').innerHTML = '<div class="empty-state">暂无开支项目<br>请先在「开支」添加</div>';
-    return;
-  }
-  let html = '';
-  if (rec.length) {
-    html += '<div class="section-label">每月固定</div>';
-    rec.forEach(exp => {
-      const marked = isMarked(exp.id);
-      const d = daysUntil(exp.billing_day);
-      let cls, label;
-      if (marked) { cls = 'day-done'; label = '✓'; }
-      else if (d < 0) { cls = 'day-overdue'; label = d + 'd'; }
-      else if (d <= 3) { cls = 'day-soon'; label = d === 0 ? '今' : d + 'd'; }
-      else { cls = 'day-normal'; label = exp.billing_day + '日'; }
-      html += reminderCard(exp, cls, label, marked);
-    });
-  }
-  if (one.length) {
-    html += '<div class="section-label" style="margin-top:24px">一次性（待记账）</div>';
-    one.forEach(exp => { html += reminderCard(exp, 'day-onetime', '1×', false); });
-  }
-  document.getElementById('tab-reminders').innerHTML = html;
-}
-
-function renderExpenses() {
-  const groups = [['wynne','WYNNE CONSULTANCY GROUP PLT'],['thf','THE HOME FACTORY SDN. BHD.'],['twn','TAN WEI NEE']];
-  let html = '';
-  groups.forEach(([key, label]) => {
-    const items = expenses.filter(e => e.entity === key);
-    if (!items.length) return;
-    html += `<div class="section-label">${label}</div>`;
-    items.forEach(exp => {
-      const myr = toMYR(exp.amount, exp.currency);
-      const amtStr = exp.currency === 'MYR' ? fmtMYR(myr) : `${exp.currency} ${exp.amount} ≈ ${fmtMYR(myr)}`;
-      const isOne = expType(exp) === 'onetime';
-      html += `<div class="expense-item">
-        <div class="expense-top">
-          <div class="expense-name">${exp.name}${isOne ? '<span class="one-pill">一次性</span>' : ''}</div>
-          <div class="expense-amount">${amtStr}</div>
-        </div>
-        <div style="margin-top:6px"><span class="cat-pill">${exp.category}</span>${!isOne ? `<span style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:8px">每月 ${exp.billing_day} 日</span>` : ''}</div>
-        ${exp.note ? `<div style="font-size:11px;color:var(--text3);margin-top:5px">${exp.note}</div>` : ''}
-        <div class="expense-actions">
-          <button class="btn-sm" onclick="openMark('${exp.id}')">记账</button>
-          <button class="btn-sm danger" onclick="deleteExpense('${exp.id}')">删除</button>
-        </div>
-      </div>`;
+// ── Tab: Expenses ─────────────────────────────────────
+function renderExpenses(){
+  const groups=[['wynne','WYNNE CONSULTANCY GROUP PLT'],['thf','THE HOME FACTORY SDN. BHD.'],['twn','TAN WEI NEE']];
+  let html='';
+  groups.forEach(([key,label])=>{
+    const items=expenses.filter(e=>e.entity===key);
+    if(!items.length) return;
+    html+=`<div class="section-label">${label}</div>`;
+    const byFreq={monthly:[],quarterly:[],yearly:[],onetime:[]};
+    items.forEach(e=>{ (byFreq[freq(e)]||byFreq.onetime).push(e); });
+    ['monthly','quarterly','yearly','onetime'].forEach(f=>{
+      if(!byFreq[f].length) return;
+      if(f!=='monthly') html+=`<div class="divider-label"><span>${FREQ_LABEL[f]}</span></div>`;
+      byFreq[f].forEach(exp=>{ html+=expenseRow(exp); });
     });
   });
-  if (!html) html = '<div style="color:var(--text3);font-size:12px;padding:8px 0">暂无项目</div>';
-  html += '<div class="add-row"><button class="btn-add" onclick="openModal(\'add-modal\')">+ 添加开支项目</button></div>';
-  document.getElementById('tab-expenses').innerHTML = html;
+  if(!html) html='<div style="color:var(--text3);font-size:12px;padding:8px 0">暂无项目</div>';
+  html+=`<button class="btn-add" onclick="openAdd()">+ 添加开支项目</button>`;
+  document.getElementById('tab-expenses').innerHTML=html;
 }
 
-function renderLog() {
-  if (!logs.length) { document.getElementById('tab-log').innerHTML = '<div class="empty-state">本月暂无记账记录</div>'; return; }
-  let html = '<div class="section-label">本月记账记录</div>';
-  logs.forEach(l => {
-    const exp = expenses.find(e => e.id === l.expense_id) || { name: '(已删除)', entity: '', category: '' };
-    const isOne = expType(exp) === 'onetime';
-    html += `<div class="log-item">
+function expenseRow(exp){
+  const myr=toMYR(exp.amount,exp.currency);
+  const amtStr=exp.currency==='MYR'?fmtMYR(myr):`${exp.currency} ${exp.amount} ≈ ${fmtMYR(myr)}`;
+  const f=freq(exp);
+  const tp=taxPct(exp);
+  const freqInfo=f==='monthly'?`每月 ${exp.billing_day} 日`:f==='quarterly'?`每季`:f==='yearly'?`每年 ${MONTHS[(parseInt(exp.due_month)||1)-1]}`:'' ;
+  return `<div class="expense-item">
+    <div class="expense-top">
+      <div class="expense-name">${exp.name}</div>
+      <div class="expense-amount">${amtStr}</div>
+    </div>
+    <div class="expense-bottom">
+      <span class="pill ${taxPillCls(tp)}">${taxPillLabel(tp)}</span>
+      <span class="pill pill-cat">${exp.tax_category||'—'}</span>
+      ${freqInfo?`<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${freqInfo}</span>`:''}
+    </div>
+    ${exp.note?`<div style="font-size:11px;color:var(--text3);margin-top:5px">${exp.note}</div>`:''}
+    <div class="expense-actions">
+      <button class="btn-sm" onclick="openMark('${exp.id}')">记账</button>
+      <button class="btn-sm danger" onclick="deleteExpense('${exp.id}')">删除</button>
+    </div>
+  </div>`;
+}
+
+// ── Tab: Log ──────────────────────────────────────────
+function renderLog(){
+  if(!logs.length){document.getElementById('tab-log').innerHTML='<div class="empty-state">本月暂无记账记录</div>';return;}
+  let html='<div class="section-label">本月记账记录</div>';
+  logs.forEach(l=>{
+    const exp=expenses.find(e=>e.id===l.expense_id)||{name:'(已删除)',entity:'',tax_category:''};
+    html+=`<div class="log-item">
       <div style="flex:1;min-width:0">
-        <div class="log-name">${exp.name}${isOne ? '<span class="one-pill" style="margin-left:6px">一次性</span>' : ''}</div>
-        <div class="log-meta"><span class="entity-pill">${entityShort(exp.entity)}</span>${l.note ? ' · ' + l.note : ''}</div>
+        <div class="log-name">${exp.name}</div>
+        <div class="log-meta"><span class="pill pill-entity">${entityShort(exp.entity)}</span>${l.note?' · '+l.note:''}</div>
         <button class="btn-sm danger" style="margin-top:6px" onclick="deleteLog('${l.id}')">删除记录</button>
       </div>
-      <div style="text-align:right;flex-shrink:0;margin-left:12px">
+      <div style="text-align:right;flex-shrink:0;margin-left:10px">
         <div class="log-amount">${fmtMYR(l.myr_amount)}</div>
-        <div class="log-date">${l.log_date}${l.exchange_rate ? ' · 汇率 ' + l.exchange_rate : ''}</div>
+        <div class="log-date">${l.log_date}${l.exchange_rate?' · 汇率 '+l.exchange_rate:''}</div>
       </div>
     </div>`;
   });
-  document.getElementById('tab-log').innerHTML = html;
+  document.getElementById('tab-log').innerHTML=html;
 }
 
-function renderSummary() {
-  const rec = expenses.filter(e => expType(e) === 'recurring');
-  const byEntity = { wynne: 0, thf: 0, twn: 0 };
-  const byCat = {};
-  rec.forEach(e => {
-    const m = toMYR(e.amount, e.currency);
-    byEntity[e.entity] += m;
-    byCat[e.category] = (byCat[e.category] || 0) + m;
+// ── Tab: Summary ──────────────────────────────────────
+function renderSummary(){
+  const byEntity={wynne:0,thf:0,twn:0};
+  const byFreq={monthly:0,quarterly:0,yearly:0};
+  expenses.filter(e=>freq(e)!=='onetime').forEach(e=>{
+    const m=monthlyEquiv(e);
+    byEntity[e.entity]=(byEntity[e.entity]||0)+m;
+    byFreq[freq(e)]=(byFreq[freq(e)]||0)+toMYR(e.amount,e.currency);
   });
-  const total = Object.values(byEntity).reduce((a, b) => a + b, 0);
-  let html = '<div class="section-label">月度固定（按实体）</div>';
-  [['wynne','WYNNE PLT'],['thf','HOME FACTORY'],['twn','TAN WEI NEE']].forEach(([k,l]) => {
-    if (!byEntity[k]) return;
-    html += `<div class="summary-row"><span class="summary-label">${l}</span><span class="summary-val">${fmtMYR(byEntity[k])}</span></div>`;
+  const totalMonthly=Object.values(byEntity).reduce((a,b)=>a+b,0);
+  const logTotal=logs.reduce((s,l)=>s+l.myr_amount,0);
+
+  let html=`<div class="section-label">月度固定开支（月均）</div>`;
+  [['wynne','WYNNE PLT'],['thf','HOME FACTORY'],['twn','TAN WEI NEE']].forEach(([k,l])=>{
+    if(!byEntity[k]) return;
+    html+=`<div class="summary-row"><span class="summary-label">${l}</span><span class="summary-val">${fmtMYR(byEntity[k])}/月</span></div>`;
   });
-  html += `<div class="summary-row" style="border-top:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2);font-weight:500">月度合计</span><span class="summary-val">${fmtMYR(total)}</span></div>`;
-  if (Object.keys(byCat).length) {
-    html += '<div class="section-label">月度固定（按类别）</div>';
-    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
-      html += `<div class="summary-row"><span class="summary-label">${cat}</span><span class="summary-val">${fmtMYR(amt)}</span></div>`;
-    });
+  html+=`<div class="summary-row" style="border-top:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2);font-weight:500">月均合计</span><span class="summary-val">${fmtMYR(totalMonthly)}/月</span></div>`;
+  html+=`<div class="summary-row"><span class="summary-label">年化合计</span><span style="font-family:var(--mono);font-size:12px;color:var(--text2)">${fmtMYR(totalMonthly*12)}/年</span></div>`;
+
+  html+=`<div class="section-label">按频率（实际金额）</div>`;
+  if(byFreq.monthly) html+=`<div class="summary-row"><span class="summary-label">每月固定</span><span class="summary-val">${fmtMYR(byFreq.monthly)}/月</span></div>`;
+  if(byFreq.quarterly) html+=`<div class="summary-row"><span class="summary-label">每季</span><span class="summary-val">${fmtMYR(byFreq.quarterly)}/季</span></div>`;
+  if(byFreq.yearly) html+=`<div class="summary-row"><span class="summary-label">每年</span><span class="summary-val">${fmtMYR(byFreq.yearly)}/年</span></div>`;
+
+  html+=`<div class="section-label">本月实际记账</div>`;
+  html+=`<div class="summary-row"><span class="summary-label">已记账金额</span><span style="font-family:var(--mono);font-size:12px;color:var(--success)">${fmtMYR(logTotal)}</span></div>`;
+
+  document.getElementById('tab-summary').innerHTML=html;
+}
+
+// ── Tab: Tax ──────────────────────────────────────────
+let taxLogs=[];
+async function renderTax(){
+  document.getElementById('tab-tax').innerHTML='<div class="loading">加载中...</div>';
+  taxLogs=await loadLogsForYear(summaryYear);
+
+  // Build lookup: log → expense
+  const byTaxCat={};
+  taxLogs.forEach(l=>{
+    const exp=expenses.find(e=>e.id===l.expense_id)||{tax_category:'Miscellaneous',tax_deductible:100,entity:'',name:''};
+    const cat=exp.tax_category||'Miscellaneous';
+    if(!byTaxCat[cat]) byTaxCat[cat]={total:0,deductible:0,items:[]};
+    byTaxCat[cat].total+=l.myr_amount;
+    const pct=taxPct(exp);
+    byTaxCat[cat].deductible+=l.myr_amount*(pct/100);
+    byTaxCat[cat].items.push({...l,expName:exp.name,entity:exp.entity,pct});
+  });
+
+  const grandTotal=taxLogs.reduce((s,l)=>s+l.myr_amount,0);
+  const grandDeduct=Object.values(byTaxCat).reduce((s,c)=>s+c.deductible,0);
+
+  let html=`<div class="year-switcher">
+    <button class="year-btn" onclick="changeYear(-1)">◀</button>
+    <div class="year-label">${summaryYear} 年度</div>
+    <button class="year-btn" onclick="changeYear(1)">▶</button>
+  </div>`;
+
+  html+=`<div class="tax-card" style="border-color:var(--accent-dim)">
+    <div class="tax-card-top">
+      <div><div class="tax-cat-name" style="font-size:14px">全年汇总</div><div class="tax-cat-code">Year of Assessment ${summaryYear}</div></div>
+      <div><div class="tax-amount">${fmtMYR(grandTotal)}</div><div class="tax-deductible-amount" style="color:var(--success)">可抵税 ${fmtMYR(grandDeduct)}</div></div>
+    </div>
+  </div>`;
+
+  if(!Object.keys(byTaxCat).length){
+    html+='<div class="empty-state">本年度暂无记账记录</div>';
+    document.getElementById('tab-tax').innerHTML=html;
+    return;
   }
-  const logTotal = logs.reduce((s, l) => s + l.myr_amount, 0);
-  const oneTotal = logs.filter(l => { const e = expenses.find(x => x.id === l.expense_id); return e && expType(e) === 'onetime'; }).reduce((s,l)=>s+l.myr_amount,0);
-  html += '<div class="section-label">本月实际记账</div>';
-  html += `<div class="summary-row"><span class="summary-label">固定开支</span><span style="font-family:var(--mono);font-size:13px;color:var(--success)">${fmtMYR(logTotal - oneTotal)}</span></div>`;
-  if (oneTotal > 0) html += `<div class="summary-row"><span class="summary-label">一次性开支</span><span style="font-family:var(--mono);font-size:13px;color:#8888ff">${fmtMYR(oneTotal)}</span></div>`;
-  html += `<div class="summary-row"><span style="font-size:13px;color:var(--text2);font-weight:500">本月合计</span><span style="font-family:var(--mono);font-size:13px;color:var(--success);font-weight:500">${fmtMYR(logTotal)}</span></div>`;
-  document.getElementById('tab-summary').innerHTML = html;
+
+  html+=`<div class="section-label">按税务类别明细</div>`;
+  Object.entries(byTaxCat).sort((a,b)=>b[1].total-a[1].total).forEach(([cat,data])=>{
+    const info=TAX_CATS[cat]||{zh:cat,pct:100};
+    const deductPct=data.total>0?Math.round(data.deductible/data.total*100):0;
+    html+=`<div class="tax-card">
+      <div class="tax-card-top">
+        <div>
+          <div class="tax-cat-name">${info.zh}</div>
+          <div class="tax-cat-code">${cat}</div>
+        </div>
+        <div>
+          <div class="tax-deduct ${taxPillCls(info.pct)}" style="font-size:10px">${info.pct===0?'Capital Allowance':info.pct+'% deductible'}</div>
+          <div class="tax-amount">${fmtMYR(data.total)}</div>
+          ${info.pct>0?`<div class="tax-deductible-amount" style="color:var(--success)">可抵 ${fmtMYR(data.deductible)}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Export hint
+  html+=`<div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;margin-top:20px;line-height:1.8">以上数据可直接交给会计做账<br>请保留所有收据至少7年（LHDN要求）</div>`;
+
+  document.getElementById('tab-tax').innerHTML=html;
 }
 
-function renderAll() { updateHeader(); renderReminders(); renderExpenses(); renderLog(); renderSummary(); }
-
-function switchTab(t) {
-  ['reminders','expenses','log','summary'].forEach(id => { document.getElementById('tab-' + id).style.display = id === t ? '' : 'none'; });
-  document.querySelectorAll('.tab').forEach((btn, i) => { btn.classList.toggle('active', ['reminders','expenses','log','summary'][i] === t); });
+async function changeYear(delta){
+  summaryYear+=delta;
+  await renderTax();
 }
 
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+// ── Modals ────────────────────────────────────────────
+function openAdd(){
+  document.getElementById('add-modal-title').textContent='添加开支项目';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-amount').value='';
+  document.getElementById('f-note').value='';
+  document.getElementById('f-day').value='';
+  document.getElementById('f-date').value=today.toISOString().split('T')[0];
+  setFreq('monthly'); setTax(100);
+  openModal('add-modal');
+}
 
-function openMark(expId) {
-  markingId = expId;
-  const exp = expenses.find(e => e.id === expId);
-  document.getElementById('mark-title').textContent = '记账：' + exp.name;
-  document.getElementById('m-amount').value = toMYR(exp.amount, exp.currency).toFixed(2);
-  document.getElementById('m-rate').value = exp.currency === 'USD' ? USD_MYR : exp.currency === 'SGD' ? SGD_MYR : '';
-  document.getElementById('m-date').value = today.toISOString().split('T')[0];
-  document.getElementById('m-note').value = '';
+function setFreq(f){
+  selFreq=f;
+  ['monthly','quarterly','yearly','onetime'].forEach(x=>{
+    document.getElementById('freq-'+x).className='toggle-btn'+(x===f?(f==='onetime'?' on-blue':' on'):'');
+  });
+  document.getElementById('field-day').style.display=f==='monthly'?'':'none';
+  document.getElementById('field-quarter').style.display=f==='quarterly'?'':'none';
+  document.getElementById('field-duemonth').style.display=f==='yearly'?'':'none';
+  document.getElementById('field-date').style.display=f==='onetime'?'':'none';
+}
+
+function setTax(pct){
+  selTax=pct;
+  document.getElementById('tax-100').className='toggle-btn'+(pct===100?' on':'');
+  document.getElementById('tax-50').className='toggle-btn'+(pct===50?' on':'');
+  document.getElementById('tax-0').className='toggle-btn'+(pct===0?' on':'');
+}
+
+// Auto-set tax deductible based on tax category
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-taxcat').addEventListener('change',function(){
+    const info=TAX_CATS[this.value];
+    if(info) setTax(info.pct);
+  });
+});
+
+function openMark(expId){
+  markingId=expId;
+  const exp=expenses.find(e=>e.id===expId);
+  document.getElementById('mark-title').textContent='记账：'+exp.name;
+  const myr=toMYR(exp.amount,exp.currency);
+  document.getElementById('m-amount').value=myr.toFixed(2);
+  document.getElementById('m-rate').value=exp.currency!=='MYR'?(FX[exp.currency]||''):'';
+  document.getElementById('m-date').value=today.toISOString().split('T')[0];
+  document.getElementById('m-note').value='';
   openModal('mark-modal');
 }
 
-async function saveExpense() {
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { showToast('请填写开支名称'); return; }
-  const isOne = selectedType === 'onetime';
-  try {
-    const res = await api('POST', 'expenses', {
-      name, entity: document.getElementById('f-entity').value,
-      category: document.getElementById('f-cat').value,
-      amount: parseFloat(document.getElementById('f-amount').value) || 0,
-      currency: document.getElementById('f-currency').value,
-      billing_day: isOne ? 1 : (parseInt(document.getElementById('f-day').value) || 1),
-      note: document.getElementById('f-note').value.trim(),
-      expense_type: selectedType
-    });
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// ── CRUD ──────────────────────────────────────────────
+async function saveExpense(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('请填写开支名称');return;}
+  const f=selFreq;
+  const body={
+    name,
+    entity:document.getElementById('f-entity').value,
+    tax_category:document.getElementById('f-taxcat').value,
+    tax_deductible:selTax,
+    amount:parseFloat(document.getElementById('f-amount').value)||0,
+    currency:document.getElementById('f-currency').value,
+    billing_day:f==='monthly'?(parseInt(document.getElementById('f-day').value)||1):1,
+    note:document.getElementById('f-note').value.trim(),
+    expense_type:f==='onetime'?'onetime':'recurring',
+    frequency:f,
+    due_month:f==='yearly'?parseInt(document.getElementById('f-duemonth').value):
+              f==='quarterly'?parseInt(document.getElementById('f-qmonth').value)||1:null
+  };
+  try{
+    const res=await api('POST','expenses',body);
     expenses.push(res[0]);
-    expenses.sort((a,b) => a.billing_day - b.billing_day);
+    expenses.sort((a,b)=>a.billing_day-b.billing_day);
     closeModal('add-modal');
     renderAll();
-    showToast('已添加：' + name);
-  } catch(e) { showToast('保存失败'); }
+    showToast('已添加：'+name);
+  }catch(e){showToast('保存失败');}
 }
 
-async function saveMark() {
-  if (!markingId) return;
-  try {
-    const res = await api('POST', 'expense_logs', {
-      expense_id: markingId,
-      log_date: document.getElementById('m-date').value,
-      myr_amount: parseFloat(document.getElementById('m-amount').value) || 0,
-      exchange_rate: parseFloat(document.getElementById('m-rate').value) || null,
-      note: document.getElementById('m-note').value.trim()
-    });
+async function saveMark(){
+  if(!markingId) return;
+  const body={
+    expense_id:markingId,
+    log_date:document.getElementById('m-date').value,
+    myr_amount:parseFloat(document.getElementById('m-amount').value)||0,
+    exchange_rate:parseFloat(document.getElementById('m-rate').value)||null,
+    note:document.getElementById('m-note').value.trim()
+  };
+  try{
+    const res=await api('POST','expense_logs',body);
     logs.unshift(res[0]);
-    // 一次性开支记账后自动从列表移除
-    const exp = expenses.find(e => e.id === markingId);
-    if (exp && expType(exp) === 'onetime') {
-      await api('DELETE', 'expenses', null, `id=eq.${markingId}`);
-      expenses = expenses.filter(e => e.id !== markingId);
+    const exp=expenses.find(e=>e.id===markingId);
+    if(exp&&freq(exp)==='onetime'){
+      await api('DELETE','expenses',null,'id=eq.'+markingId);
+      expenses=expenses.filter(e=>e.id!==markingId);
     }
     closeModal('mark-modal');
     renderAll();
     showToast('记账成功');
-  } catch(e) { showToast('保存失败'); }
-  markingId = null;
+  }catch(e){showToast('保存失败');}
+  markingId=null;
 }
 
-async function deleteExpense(id) {
-  const exp = expenses.find(e => e.id === id);
-  if (!confirm(`确认删除「${exp.name}」？`)) return;
-  try {
-    await api('DELETE', 'expenses', null, `id=eq.${id}`);
-    expenses = expenses.filter(e => e.id !== id);
-    renderAll(); showToast('已删除');
-  } catch(e) { showToast('删除失败'); }
+async function deleteExpense(id){
+  const exp=expenses.find(e=>e.id===id);
+  if(!confirm(`确认删除「${exp.name}」？`)) return;
+  try{
+    await api('DELETE','expenses',null,'id=eq.'+id);
+    expenses=expenses.filter(e=>e.id!==id);
+    renderAll();showToast('已删除');
+  }catch(e){showToast('删除失败');}
 }
 
-async function deleteLog(id) {
-  if (!confirm("确认删除这条记账记录？")) return;
-  try {
-    await api("DELETE", "expense_logs", null, `id=eq.${id}`);
-    logs = logs.filter(l => l.id !== id);
-    renderAll(); showToast("记录已删除");
-  } catch(e) { showToast("删除失败"); }
+async function deleteLog(id){
+  if(!confirm('确认删除这条记账记录？')) return;
+  try{
+    await api('DELETE','expense_logs',null,'id=eq.'+id);
+    logs=logs.filter(l=>l.id!==id);
+    renderAll();showToast('记录已删除');
+  }catch(e){showToast('删除失败');}
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+// ── Tab switching ─────────────────────────────────────
+let activeTab='reminders';
+function switchTab(t){
+  activeTab=t;
+  ['reminders','expenses','log','summary','tax'].forEach(id=>{
+    document.getElementById('tab-'+id).style.display=id===t?'':'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn,i)=>{
+    btn.classList.toggle('active',['reminders','expenses','log','summary','tax'][i]===t);
+  });
+  if(t==='tax') renderTax();
 }
 
-async function init() {
-  document.getElementById('tab-reminders').innerHTML = '<div class="loading">加载中...</div>';
+function renderAll(){
+  updateHeader();
+  renderReminders();
+  renderExpenses();
+  renderLog();
+  renderSummary();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── Init ──────────────────────────────────────────────
+async function init(){
+  document.getElementById('tab-reminders').innerHTML='<div class="loading">加载中...</div>';
   await loadData();
-  if (expenses.length === 0) {
-    try {
-      const res = await api('POST', 'expenses', { name: 'Claude Pro 订阅', entity: 'thf', category: '软件订阅', amount: 20, currency: 'USD', billing_day: 24, note: '', expense_type: 'recurring' });
-      expenses = res;
-    } catch(e) {}
+  if(!expenses.length){
+    try{
+      const res=await api('POST','expenses',{
+        name:'Claude Pro 订阅',entity:'thf',
+        tax_category:'Software & Subscriptions',tax_deductible:100,
+        amount:20,currency:'USD',billing_day:24,
+        expense_type:'recurring',frequency:'monthly',note:''
+      });
+      expenses=res;
+    }catch(e){}
   }
   renderAll();
-  document.getElementById('f-date').value = today.toISOString().split('T')[0];
 }
 
 init();
