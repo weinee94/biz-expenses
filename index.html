@@ -229,7 +229,7 @@ select.fi option{background:var(--surface)}
   </div>
   <div class="fg"><label class="fl">税务类别 (LHDN)</label>
     <select class="fi" id="f-taxcat">
-      <option value="Salaries & EPF/SOCSO/EIS">薪资与雇主供款 — Salaries & EPF/SOCSO/EIS</option>
+      <option value="Salaries & EPF/SOCSO/EIS">薪资与供款 — Salaries & EPF/SOCSO/EIS</option>
       <option value="Professional Fees">专业服务费 — Professional Fees</option>
       <option value="Rental">租金 — Rental</option>
       <option value="Software & Subscriptions">软件订阅 — Software & Subscriptions</option>
@@ -241,12 +241,18 @@ select.fi option{background:var(--surface)}
       <option value="Utilities">公用事业 — Utilities</option>
       <option value="Bank Charges">银行手续费 — Bank Charges</option>
       <option value="Insurance">保险 — Insurance</option>
-      <option value="Govt Fees & Licences">政府规费与执照 — Govt Fees & Licences</option>
+      <option value="Govt Fees & Licences">政府规费 — Govt Fees & Licences</option>
       <option value="Training & Development">培训进修 — Training & Development</option>
       <option value="Printing & Stationery">印刷文具 — Printing & Stationery</option>
       <option value="Donations">捐款 — Donations</option>
+      <option value="Staff Welfare">员工福利 — Staff Welfare</option>
+      <option value="General & Administrative Expenses">行政杂费 — General & Administrative Expenses</option>
+      <option value="Site Upkeep & Safety">工地维护安全 — Site Upkeep & Safety</option>
+      <option value="Subcontractor Payments">外包工程费 — Subcontractor Payments</option>
+      <option value="Motor Vehicle Expenses">车辆费用 — Motor Vehicle Expenses</option>
+      <option value="Interest & Financing Charges">利息融资费 — Interest & Financing Charges</option>
       <option value="Capital Expenditure">资本开支 — Capital Expenditure (CA)</option>
-      <option value="Miscellaneous">其他 — Miscellaneous</option>
+      <option value="Miscellaneous">其他杂项 — Miscellaneous</option>
     </select>
   </div>
   <div class="fg"><label class="fl">可抵税比例</label>
@@ -326,8 +332,14 @@ const TCATS={
   'Training & Development':{zh:'培训进修',pct:100},
   'Printing & Stationery':{zh:'印刷文具',pct:100},
   'Donations':{zh:'捐款',pct:100},
+  'Staff Welfare':{zh:'员工福利',pct:100},
+  'General & Administrative Expenses':{zh:'行政杂费',pct:100},
+  'Site Upkeep & Safety':{zh:'工地维护安全',pct:100},
+  'Subcontractor Payments':{zh:'外包工程费',pct:100},
+  'Motor Vehicle Expenses':{zh:'车辆费用',pct:67},
+  'Interest & Financing Charges':{zh:'利息融资费',pct:100},
   'Capital Expenditure':{zh:'资本开支',pct:0},
-  'Miscellaneous':{zh:'其他',pct:100}
+  'Miscellaneous':{zh:'其他杂项',pct:100}
 };
 
 let expenses=[],logs=[],markingId=null;
