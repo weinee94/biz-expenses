@@ -99,12 +99,12 @@ select.ei option{background:var(--surface)}
 <body>
 <div class="wrap">
   <div class="title">📋 单据识别记账</div>
-  <div class="subtitle">贴入 Claude 识别结果 → 确认 → 直接记账</div>
+  <div class="subtitle">贴入 JSON 数据 → 确认 → 直接记账</div>
 
   <!-- How to -->
   <div class="how">
-    <div class="step"><div class="sn">1</div><div class="st">在 <strong>Claude 对话</strong>上传单据图片，获得 JSON</div></div>
-    <div class="step"><div class="sn">2</div><div class="st">选择<strong>所属实体</strong>，贴入 JSON</div></div>
+    <div class="step"><div class="sn">1</div><div class="st">选择<strong>所属实体</strong></div></div>
+    <div class="step"><div class="sn">2</div><div class="st">贴入 <strong>JSON 数据</strong></div></div>
     <div class="step"><div class="sn">3</div><div class="st">检查识别结果，按需修改</div></div>
     <div class="step"><div class="sn">4</div><div class="st">点<strong>确认记账</strong>，直接写入系统</div></div>
   </div>
@@ -120,7 +120,7 @@ select.ei option{background:var(--surface)}
     </div>
 
     <!-- JSON paste -->
-    <label class="section-label">贴入 Claude 的 JSON 识别结果</label>
+    <label class="section-label">贴入 JSON 数据</label>
     <textarea class="paste-area" id="json-input" placeholder='{"name":"餐饮","date":"2026-03-24","amount":85.50,"currency":"MYR","myr_amount":85.50,"tax_category":"Entertainment","tax_deductible":50,"entity":"twn","note":""}'></textarea>
     <button class="parse-btn" onclick="parseJSON()">解析</button>
   </div>
@@ -270,7 +270,7 @@ function parseJSON(){
     }
     showResult(parsedData);
   }catch(e){
-    showErr('JSON 格式有误，请检查是否完整复制了 Claude 的输出。');
+    showErr('JSON 格式有误，请检查数据是否完整。');
   }
 }
 

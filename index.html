@@ -316,6 +316,13 @@ select.fi option{background:var(--surface)}
       <button class="sf-b" id="el-0" onclick="setElTax(0)">不可抵税</button>
     </div>
   </div>
+  <div class="fg"><label class="fl">实体</label>
+    <select class="fi" id="el-entity">
+      <option value="wynne">WYNNE CONSULTANCY GROUP PLT</option>
+      <option value="thf">THE HOME FACTORY SDN. BHD.</option>
+      <option value="twn">TAN WEI NEE</option>
+    </select>
+  </div>
   <div class="fg"><label class="fl">税务类别</label>
     <select class="fi" id="el-taxcat">
       <option value="Salaries & EPF/SOCSO/EIS">薪资与供款</option>
@@ -593,6 +600,7 @@ function openLogEdit(id){
   const cat=getLogCat(l)||'Miscellaneous';
   const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
   document.getElementById('editlog-title').textContent='编辑：'+getLogName(l);
+  document.getElementById('el-entity').value=l.log_type==='onetime'?(l.item_entity||'twn'):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?ekey(e.entity):'twn';})();
   document.getElementById('el-taxcat').value=cat;
   document.getElementById('el-note').value=l.note||'';
   setElTax(pct);
@@ -610,6 +618,7 @@ async function saveLogEdit(){
   if(l.log_type==='onetime'){
     body.item_tax_category=cat;
     body.item_tax_deductible=elSelTax;
+    body.item_entity=document.getElementById('el-entity').value;
   }
   try{
     await api('PATCH','expense_logs',body,'id=eq.'+editingLogId);
@@ -624,14 +633,16 @@ async function saveLogEdit(){
 
 // Summary
 function renderSummary(){
-  const be={wynne:0,thf:0,twn:0},bf={monthly:0,quarterly:0,yearly:0};
-  expenses.filter(e=>freq(e)!=='onetime').forEach(e=>{
+  const be={wynne:0,thf:0,twn:0},bf={monthly:0,quarterly:0,yearly:0,triennial:0};
+  expenses.forEach(e=>{
+    const f=freq(e);
     const k=ekey(e.entity);
     be[k]=(be[k]||0)+moEquiv(e);
-    bf[freq(e)]=(bf[freq(e)]||0)+toMYR(e.amount,e.currency);
+    if(bf[f]!==undefined) bf[f]=(bf[f]||0)+toMYR(e.amount,e.currency);
   });
   const tot=Object.values(be).reduce((a,b)=>a+b,0);
-  const logTot=logs.reduce((s,l)=>s+l.myr_amount,0);
+  const m=String(thisMonth+1).padStart(2,'0');
+  const logTot=logs.filter(l=>l.log_date&&l.log_date.startsWith(`${thisYear}-${m}`)).reduce((s,l)=>s+l.myr_amount,0);
   let h='<div class="slabel">月均固定开支</div><div class="card">';
   [['wynne','WYNNE PLT'],['thf','THF'],['twn','TWN']].forEach(([k,l])=>{
     if(!be[k]) return;
@@ -643,6 +654,7 @@ function renderSummary(){
   if(bf.monthly) h+=`<div class="sr"><span class="sr-l">每月固定</span><span class="sr-v">${fmt(bf.monthly)}/月</span></div>`;
   if(bf.quarterly) h+=`<div class="sr"><span class="sr-l">每季</span><span class="sr-v">${fmt(bf.quarterly)}/季</span></div>`;
   if(bf.yearly) h+=`<div class="sr"><span class="sr-l">每年</span><span class="sr-v">${fmt(bf.yearly)}/年</span></div>`;
+  if(bf.triennial) h+=`<div class="sr"><span class="sr-l">每三年</span><span class="sr-v">${fmt(bf.triennial)}/3年</span></div>`;
   h+='</div>';
   h+='<div class="slabel">本月实际记账</div><div class="card">';
   h+=`<div class="sr"><span class="sr-l">已记账金额</span><span class="sr-v g">${fmt(logTot)}</span></div>`;
@@ -686,12 +698,12 @@ async function renderReport(){
 
   const fl=rptLogs.filter(l=>{
     if(rptEnt==='all') return true;
-    const e=expenses.find(x=>x.id===l.expense_id);
-    return e&&ekey(e.entity)===rptEnt;
+    return ekey(getLogEntity(l))===rptEnt;
   });
   if(!fl.length){h+='<div class="empty">'+periodLbl+'暂无记账记录</div>';document.getElementById('tab-report').innerHTML=h;return;}
   const bc={};
-  const flValid=fl.filter(l=>l.log_type==='onetime'||!l.expense_id||expenses.find(x=>x.id===l.expense_id));
+  // Keep all valid logs: onetime always kept, fixed kept if expense still exists
+  const flValid=fl.filter(l=>l.log_type==='onetime'||(l.expense_id&&expenses.find(x=>x.id===l.expense_id)));
   flValid.forEach(l=>{
     const cat=getLogCat(l)||'Miscellaneous';
     const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
@@ -725,12 +737,13 @@ function setRE(e){rptEnt=e;renderReport();}
 function setRYear(y){rptYear=y;renderReport();}
 
 // Tax
-let taxLogs2=[];
+let taxLogs2=[],taxEnt='all';
 async function renderTax(){
   document.getElementById('tab-tax').innerHTML='<div class="loading">加载中...</div>';
   taxLogs2=await loadYear(taxYear);
   const bc={};
-  const taxValid=taxLogs2.filter(l=>l.log_type==='onetime'||!l.expense_id||expenses.find(x=>x.id===l.expense_id));
+  const taxFiltered=taxEnt==='all'?taxLogs2:taxLogs2.filter(l=>ekey(getLogEntity(l))===taxEnt);
+  const taxValid=taxFiltered.filter(l=>l.log_type==='onetime'||(l.expense_id&&expenses.find(x=>x.id===l.expense_id)));
   taxValid.forEach(l=>{
     const cat=getLogCat(l)||'Miscellaneous';
     const pct=l.log_type==='onetime'?(l.item_tax_deductible||100):(()=>{const e=expenses.find(x=>x.id===l.expense_id);return e?tpct(e):100;})();
@@ -740,7 +753,13 @@ async function renderTax(){
   });
   const grand=taxValid.reduce((s,l)=>s+l.myr_amount,0);
   const grandDed=Object.values(bc).reduce((s,c)=>s+c.ded,0);
-  let h=`<div class="yn"><button class="yn-btn" onclick="chgYear(-1)">‹</button><div class="yn-lbl">${taxYear} 年度</div><button class="yn-btn" onclick="chgYear(1)">›</button></div>`;
+  let h=`<div class="yn"><button class="yn-btn" onclick="chgYear(-1)">‹</button><div class="yn-lbl">${taxYear} 年度</div><button class="yn-btn" onclick="chgYear(1)">›</button></div>
+  <div style="display:flex;background:var(--surface2);border-radius:20px;padding:3px;gap:2px;margin-bottom:16px">
+    <button class="seg-b ${taxEnt==='all'?'on':''}" onclick="setTE('all')">全部</button>
+    <button class="seg-b ${taxEnt==='wynne'?'on':''}" onclick="setTE('wynne')">WYNNE</button>
+    <button class="seg-b ${taxEnt==='thf'?'on':''}" onclick="setTE('thf')">THF</button>
+    <button class="seg-b ${taxEnt==='twn'?'on':''}" onclick="setTE('twn')">TWN</button>
+  </div>`;
   h+=`<div class="tax-hero"><div class="tax-hero-lbl">全年已记账</div><div class="tax-hero-amt">${fmt(grand)}</div><div class="tax-hero-sub">可抵税金额 ${fmt(grandDed)}</div></div>`;
   if(!Object.keys(bc).length){h+='<div class="empty">本年度暂无记账记录</div>';document.getElementById('tab-tax').innerHTML=h;return;}
   h+='<div class="slabel">按 LHDN 税务类别</div>';
@@ -752,6 +771,7 @@ async function renderTax(){
   document.getElementById('tab-tax').innerHTML=h;
 }
 async function chgYear(d){taxYear+=d;await renderTax();}
+function setTE(e){taxEnt=e;renderTax();}
 
 // Modals
 function openAdd(){
